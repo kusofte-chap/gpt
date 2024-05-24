@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
       <Presentation />
-      <PageFooter />
+      {/* <PageFooter /> */}
     </div>
   );
 }

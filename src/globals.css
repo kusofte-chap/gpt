@@ -50,3 +50,9 @@ textarea:focus {
   height: 18px;
   width: 18px
 }
+.icon-sm,.icon-sm-heavy {
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem
+}
+

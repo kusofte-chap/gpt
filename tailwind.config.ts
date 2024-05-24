@@ -2,9 +2,6 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    // "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    // "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    // "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx,svg}",
   ],
@@ -20,7 +17,7 @@ const config: Config = {
         'token-border-light': 'rgba(0, 0, 0, 0.1)',
         'token-main-surface-primary': '#fff',
         'token-text-error': '#b91c1c',
-        'token-main-surface-secondary':'#ececec',
+        'token-main-surface-secondary':'#f9f9f9',
         'token-border-medium':'rgba(0, 0, 0, 0.15)',
         'token-border-xheavy':'rgba(0, 0, 0, 0.25)',
       }

@@ -37,7 +37,7 @@ function SideBarHeader() {
 
 export default function SideBar() {
     return (
-        <div className='w-[260px] h-full'>
+        <div className='w-[260px] h-full' id='gpt-sidebar'>
             <div className='flex flex-col h-full'>
                 <div className="flex flex-col h-full min-h-0">
                     <nav className='flex w-full h-full flex-col px-3 pb-3.5'>
