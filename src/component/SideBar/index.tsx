@@ -3,11 +3,6 @@ import { HistoryList } from './historyItem';
 import Footer from './footer';
 import LogoSvg from '@/assets/logo.svg'
 import EditIcon from '@/assets/icons/icon-edit.svg'
-// import MoreIcon from '@/assets/icons/icon-more.svg'
-
-// import RenameIcon from '@/assets/icons/icon-rename.svg?react'
-// import DeleteIcon from '@/assets/icons/icon-delete.svg?react'
-
 
 function SideBarHeader() {
     return (

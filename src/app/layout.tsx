@@ -18,7 +18,9 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.630a2b99.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="https://cdn.oaistatic.com/_next/static/media/favicon-16x16.a052137e.png" />
       </head>
+
       <body>{children}</body>
+      <script src="/jsencrypt.min.js" async  ></script>
     </html>
   );
 }

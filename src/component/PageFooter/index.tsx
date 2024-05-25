@@ -17,8 +17,15 @@ interface IPrompt {
 
 function RecommendPrompts({ prompts }: { prompts: IPrompt[] }) {
   const isSmDevice = useMediaQuery('(max-width: 640px)')
+  const showPrompts = (prompts.length > 0)
+
   return (
-    <div className="relative h-full w-full">
+    <div className={cn('relative h-full w-full transition-all delay-100 duration-500 ease-in translate-y-0',
+      {
+        '-translate-y-[-100%] opacity-0': !showPrompts,
+        'translate-y-0 opacity-100': showPrompts,
+      })
+    }>
       <div className='flex flex-col gap-3.5 pb-3.5 pt-2'>
         <div className='grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 mb-4 md:mb-0'>
           <div className='flex flex-col gap-2'>
@@ -74,7 +81,7 @@ export default function PageFooter() {
   const { data: prompts = [], loading } = useRequest<IPrompt[], any>(getDefaultPrompts)
 
   return (
-    <div className='w-full md:pt-0 dark:border-white/20 md:border-transparent md:dark:border-transparent md:w-[calc(100%-.5rem)]'>
+    <div className='w-full md:pt-0 md:border-transparent'>
       <div className="px-3 text-base md:px-4 m-auto lg:px-1 xl:px-5">
         <div className='mx-auto flex flex-1 gap-3 text-base juice:gap-4 juice:md:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'>
           <form className='w-full'>

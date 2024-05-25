@@ -1,31 +1,34 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import qs from "qs";
+import { handleLogout } from "../until";
 
-//api接口還未確定後期可能會修改響應攔截器
 const request = axios.create({
-    baseURL: `http://47.89.155.63:8089/api/`
+    baseURL: `http://47.89.155.63:8089`
 });
 
-const token = 'eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiJhN2QyZTc3YjhkZDE0Mjk2YmZjMjBlZWQ5ZGQ5MDYyZiIsInVzZXIiOiJhZG1pbiIsInN1YiI6ImFkbWluIn0.Bpaos8kIv8hJAvyJ148zBCJep1by--02oMx6lUx3hzGhJYeNXtprJTiLkYv9dwqtMMY7fwvJrpq10mzgVMW48w'
-
-const requestInterceptor = async (config: InternalAxiosRequestConfig) => {
-    config.headers!['Authorization'] = `Bearer ${token}`;
+// 请求拦截器
+request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    config.headers!['Authorization'] = localStorage.getItem('gpt_token')
     config.paramsSerializer = {
         serialize: (params) => qs.stringify(params),
     };
     return config;
-};
-
-request.interceptors.request.use(requestInterceptor, (error) =>
+}, (error) =>
     Promise.reject(error)
 );
 
+
+// 响应拦截拦截器
 request.interceptors.response.use(
-    (response) => {
-        return Promise.resolve(response.data);
+    response => {
+        return response.data
     },
-    (error) => {
-        return Promise.reject(error?.response?.data);
+    error => {
+        if (error.response.data.status === 401) {
+            handleLogout()
+        }
+        return Promise.reject(error)
     }
-);
+)
+
 export default request;

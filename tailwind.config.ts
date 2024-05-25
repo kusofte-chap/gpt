@@ -20,6 +20,9 @@ const config: Config = {
         'token-main-surface-secondary':'#f9f9f9',
         'token-border-medium':'rgba(0, 0, 0, 0.15)',
         'token-border-xheavy':'rgba(0, 0, 0, 0.25)',
+      },
+      boxShadow: {
+        '3xl':'inset 0 0 0 150px #0000001a'
       }
     },
   },
