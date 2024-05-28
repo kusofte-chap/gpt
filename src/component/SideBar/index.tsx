@@ -36,7 +36,7 @@ export default function SideBar() {
             <div className='flex flex-col h-full'>
                 <div className="flex flex-col h-full min-h-0">
                     <nav className='flex w-full h-full flex-col px-3 pb-3.5'>
-                        <div className='flex-col flex-1 transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto'>
+                        <div className='flex-1 flex flex-col transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto'>
                             <SideBarHeader />
                             <HistoryList />
                         </div>

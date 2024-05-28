@@ -1,15 +1,25 @@
 import { Dispatch } from "react"
 
-
-export interface IChartItem {
-    id: string,
-    title: string
+export interface IHistoryItem {
+    conversation_id: string,
+    createTime: string,
+    model: string,
+    title: string,
+    updateTime: string
+    dateKey:string
 }
 
-export interface IHistoryGroup {
-    id: string,
-    title: string,
-    list: IChartItem[]
+export interface IHistoryGroup{
+    id:string
+    title:string,
+    list:IHistoryItem[]
+}
+
+export interface IHistoryList {
+    total: number
+    size:number
+    number:number
+    items: IHistoryItem[]
 }
 
 export interface IPopoverContext {

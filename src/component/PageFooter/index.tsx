@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import IconFile from '@/assets/icons/icon-file.svg'
 import IconSend from '@/assets/icons/icon-send.svg'
 import IconUp from '@/assets/icons/icon-up.svg';
@@ -8,6 +8,8 @@ import { useRequest } from 'ahooks';
 import { getDefaultPrompts } from '@/api/gpt';
 import cn from 'classnames'
 import { useMediaQuery } from '@mui/material';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { IErrorRst } from '@/interface/common';
 
 interface IPrompt {
   description: string,
@@ -15,7 +17,7 @@ interface IPrompt {
   prompt: string
 }
 
-function RecommendPrompts({ prompts }: { prompts: IPrompt[] }) {
+function RecommendPrompts({ prompts = [] }: { prompts: IPrompt[] }) {
   const isSmDevice = useMediaQuery('(max-width: 640px)')
   const showPrompts = (prompts.length > 0)
 
@@ -30,7 +32,7 @@ function RecommendPrompts({ prompts }: { prompts: IPrompt[] }) {
         <div className='grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2 mb-4 md:mb-0'>
           <div className='flex flex-col gap-2'>
             {
-              prompts.slice(0, isSmDevice ? 1 : 2).map((item, index) => {
+              prompts?.slice(0, isSmDevice ? 1 : 2).map((item, index) => {
                 return (
                   <button key={index} className='relative group w-full whitespace-nowrap rounded-xl px-4 py-3 text-left text-token-text-primary md:whitespace-normal border-token-border-medium border hover:bg-[#f9f9f9]'>
                     <div className='flex'>
@@ -51,7 +53,7 @@ function RecommendPrompts({ prompts }: { prompts: IPrompt[] }) {
           </div>
           <div className='flex flex-col gap-2'>
             {
-              prompts.slice(isSmDevice ? 3 : 2).map((item, index) => {
+              prompts?.slice(isSmDevice ? 3 : 2).map((item, index) => {
                 return (
                   <button key={index} className='relative group w-full whitespace-nowrap rounded-xl px-4 py-3 text-left text-token-text-primary md:whitespace-normal border-token-border-medium border hover:bg-[#f9f9f9]'>
                     <div className='flex'>
@@ -77,8 +79,47 @@ function RecommendPrompts({ prompts }: { prompts: IPrompt[] }) {
   )
 }
 
-export default function PageFooter() {
-  const { data: prompts = [], loading } = useRequest<IPrompt[], any>(getDefaultPrompts)
+export default function PageFooter({ showPrompts = true }: { showPrompts?: boolean }) {
+  // const { data, loading } = useRequest<IPrompt[], any>(getDefaultPrompts)
+
+  // const prompts = useMemo(() => {
+  //   return Array.isArray(data) ? data.slice() : []
+  // }, [data])
+  const prompts: any[] = []
+  const onSend = (e: any) => {
+    // e.preventDefault()
+    // const ctl = new AbortController();
+
+    // const evtSource = fetchEventSource(`http://47.89.155.63:8089/api/conversation`, {
+    //   method: "POST",
+    //   signal: ctl.signal,
+    //   headers: {
+    //     Authorization: `Bearer ${localStorage.getItem("gpt_token")}`,
+    //     // 'Content-Type': 'text/event-stream',
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     "messages": {
+    //       "content": "首次创建对话11"
+    //     },
+    //     "model": "gpt-3.5-turbo",
+    //     "conversation_mode": {
+    //       "kind": "primary_assistant"
+    //     }
+    //   }),
+    //   onmessage: event => {
+    //     console.log('event:', event)
+    //   },
+    //   onclose() {
+    //     console.info('close')
+    //     ctl.abort();
+    //   },
+    //   onerror: event => {
+    //     ctl.abort();
+    //     console.error('error', event)
+    //   }
+    // });
+  }
 
   return (
     <div className='w-full md:pt-0 md:border-transparent'>
@@ -86,8 +127,9 @@ export default function PageFooter() {
         <div className='mx-auto flex flex-1 gap-3 text-base juice:gap-4 juice:md:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'>
           <form className='w-full'>
             <div className='relative flex h-full max-w-full flex-1 flex-col'>
-              <div className={cn('absolute bottom-full left-0 right-0 transition-all ease duration-300 opacity-0', { 'opacity-100': !loading })} >
-                <RecommendPrompts prompts={prompts} />
+              {/* <div className={cn('absolute bottom-full left-0 right-0 transition-all ease duration-300 opacity-0', { 'opacity-100': !loading })} > */}
+              <div className={cn('absolute bottom-full left-0 right-0 transition-all ease duration-300 opacity-0', { 'opacity-100': true })} >
+                {showPrompts && <RecommendPrompts prompts={prompts} />}
               </div>
               <div className='overflow-hidden [&:has(textarea:focus)]:border-token-border-xheavy [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)] flex flex-col w-full flex-grow relative border dark:text-white rounded-2xl bg-token-main-surface-primary border-token-border-medium'>
                 <textarea
@@ -100,7 +142,9 @@ export default function PageFooter() {
                   </button>
                   {/* <input multiple type="file" accept='*' className="hidden" /> */}
                 </div>
-                <button disabled className='absolute bottom-1.5 right-2 rounded-lg border border-black bg-black p-0.5 text-white transition-colors enabled:bg-black disabled:text-gray-400 disabled:opacity-10 dark:border-white dark:bg-white dark:hover:bg-white md:bottom-2.5 md:right-3'>
+                <button
+                  // onClick={onSend}
+                  className='absolute bottom-1.5 right-2 rounded-lg border border-black bg-black p-0.5 text-white transition-colors enabled:bg-black disabled:text-gray-400 disabled:opacity-10 dark:border-white dark:bg-white dark:hover:bg-white md:bottom-2.5 md:right-3'>
                   <span>
                     <IconSend />
                   </span>

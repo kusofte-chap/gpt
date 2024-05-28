@@ -3,122 +3,26 @@
 import cn from 'classnames'
 import { useContext, useEffect, useMemo, useState } from "react"
 import MoreIcon from '@/assets/icons/icon-more.svg'
-import { IChartItem, IHistoryGroup } from "@/interface/history"
-import { faker } from "@faker-js/faker"
-import { FAKE_DATA } from './testData'
-import { Box, Grow, ListItemIcon, Menu, MenuItem, Popper, Typography } from '@mui/material'
+import { IHistoryItem } from "@/interface/history"
+import { Grow, ListItemIcon, Menu, MenuItem, Popper } from '@mui/material'
 import { PopoverProvider, PopoverContext } from "./context"
 import IconRename from '@/assets/icons/icon-rename.svg'
 import IconDelete from '@/assets/icons/icon-delete.svg'
+import { useRequest } from 'ahooks'
+import { getHistoryList } from '@/api/gpt'
+import moment from 'moment'
+import _groupBy from 'lodash/groupBy'
+import IconLoading from '@/assets/icons/icon-loading.svg'
 
-
-const genFakerData = (n: number,) => {
-    let count = 0
-    let list: IChartItem[] = []
-    while (count < n) {
-        count++
-        list.push({
-            id: faker.string.uuid(),
-            title: faker.lorem.words({ min: 2, max: 4 })
-        })
-    }
-    return list
-}
-
-const genHistoryList = (n: number) => {
-    let count = 0
-    let list: IHistoryGroup[] = []
-    while (count < n) {
-        count++
-        list.push({
-            id: faker.string.uuid(),
-            title: faker.person.fullName(),
-            list: genFakerData(faker.number.int({ min: 10, max: 15 }))
-        })
-    }
-    return list
-}
-
-
-interface IEditMenuProps {
-    id: string;
-    open: boolean
-    anchorEl: HTMLElement | null
-    onClose: () => void
-
-}
-
-function EditMenu({ id, open, anchorEl, onClose }: IEditMenuProps) {
-    return (
-        <Menu
-            id={id}
-            aria-labelledby="positioned-button__menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={onClose}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-            }}
-            className='shadow-lg'
-            slotProps={{
-                paper: {
-                    sx: {
-                        width: 200
-                    }
-                }
-            }}
-            sx={{
-                '.MuiMenu-paper': {
-                    // maxWidth: '300px',
-                    width: 'max-content',
-                    border: '1px solid rgba(0,0,0,.1)',
-                    borderRadius: '8px',
-                    boxShadow: 'var(--tw-ring-offset-shadow,0 0 transparent),var(--tw-ring-shadow,0 0 transparent),var(--tw-shadow)'
-                },
-                '.MuiMenu-list': {
-                    p: 0,
-                    borderRadius: '3px',
-                    '.MuiMenuItem-root': {
-                        width: 90,
-                        heigh: 40,
-                        m: '6px',
-                        p: '10px'
-                    }
-                }
-            }}
-
-        >
-            <MenuItem>
-                <ListItemIcon>
-                    <IconRename />
-                </ListItemIcon>
-                <Typography variant="inherit" noWrap>
-                    重命名
-                </Typography>
-            </MenuItem>
-            <MenuItem>
-                <ListItemIcon color='error'>
-                    <IconDelete />
-                </ListItemIcon>
-                <Typography variant="inherit" noWrap color='error'>
-                    删除
-                </Typography>
-            </MenuItem>
-        </Menu>
-    )
-}
-
-function ChartItem({ data }: { data: IChartItem }) {
+function ChartItem({ data }: { data: IHistoryItem }) {
     const { activeItemId, anchorEl, setActiveItemId, setAnchorEl } = useContext(PopoverContext)
-
     const isActive = useMemo(() => {
-        return data.id === activeItemId
+        return data.conversation_id === activeItemId
     }, [activeItemId])
 
 
     const handleItemClick = () => {
-        setActiveItemId(data.id)
+        setActiveItemId(data.conversation_id)
         setAnchorEl(prev => {
             if (prev) {
                 return null
@@ -171,41 +75,83 @@ function ChartItem({ data }: { data: IChartItem }) {
     )
 }
 
-function HistoryGroup({ data }: { data: IHistoryGroup }) {
+function HistoryGroup({ chatList, title }: { chatList: IHistoryItem[], title: string }) {
     return (
         <div className='relative mt-5 empty:mt-0 empty:hidden first:mt-0 last:mb-5'>
             <div className='bg-token-sidebar-surface-primary'>
                 <div className='flex items-center h-9'>
-                    <h3 className='pb-2 pt-3 px-2 text-xs font-medium text-ellipsis overflow-hidden break-all text-token-text-secondary'>{data.title}</h3>
+                    <h3 className='pb-2 pt-3 px-2 text-xs font-medium text-ellipsis overflow-hidden break-all text-token-text-secondary'>{title}</h3>
                 </div>
             </div>
             <ol>
                 {
-                    data.list.map((chart) => <ChartItem key={chart.id} data={chart} />)
+                    chatList.map((chart) => <ChartItem key={chart.conversation_id} data={chart} />)
                 }
             </ol>
         </div>
     )
 }
 
+
 function List() {
     const { anchorEl } = useContext(PopoverContext)
+    // const historyApi = useRequest(getHistoryList, {
+    //     defaultParams: [{ page: 1, size: 10 }],
+    // })
+
+    // const genGroupKey = (date: string) => {
+    //     const diff = moment().diff(date, 'days')
+    //     if (diff === 0) {
+    //         return '今天'
+    //     }
+    //     if (diff === 1) {
+    //         return '昨天'
+    //     }
+    //     if (diff < 8) {
+    //         return `近7天`
+    //     }
+    //     if (diff < 30) {
+    //         return `近30天`
+    //     }
+    //     if (diff < 365) {
+    //         return `${moment(date).format('M月')}`
+    //     }
+    //     return moment(date).format('YYYY年')
+    // }
+
+    // const list = useMemo(() => {
+    //     const _list = historyApi.data?.items.map((item: IHistoryItem) => {
+    //         return {
+    //             ...item,
+    //             dateKey: genGroupKey(item.createTime),
+    //         }
+    //     })
+    //     return _groupBy(_list, 'dateKey')
+    // }, [historyApi.data?.items])
+
     return (
         <>
-            <div className='flex flex-1 flex-col gap-2 pb-2 text-token-text-primary text-sm'>
+            <div className='flex flex-col gap-2 pb-2 text-token-text-primary text-sm'>
                 <div className='empty:hidden'>
-                    {
-                        FAKE_DATA.map((g) => <HistoryGroup key={g.id} data={g} />)
-                    }
+                    {/* {
+                        Object.entries(list).map((gItem) => (
+                            <HistoryGroup key={gItem[0]} title={gItem[0]} chatList={gItem[1]} />
+                        ))
+                    } */}
                 </div>
             </div>
+            {/* <div className={cn('w-full items-center justify-center flex-1', { 'hidden': !historyApi.loading, flex: historyApi.loading })}>
+                <span className='w-5 h-5 flex-shrink-0 animate-spin'>
+                    <img src='/loading.png' />
+                </span>
+            </div> */}
             {Boolean(anchorEl) && <Popper
                 open
                 anchorEl={anchorEl}
                 placement='bottom-start'
                 transition
                 sx={{
-                    zIndex: 1200,
+                    zIndex: 102,
                     transformOrigin: 'center',
                 }}
             >

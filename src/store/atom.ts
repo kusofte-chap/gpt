@@ -20,6 +20,6 @@ const localStorageEffect = (key: string) => ({ setSelf, onSet }: any) => {
 export const userInfoState = atom({
     key: 'gpt-user-info-key',
     default: null as IUser | null,
-    effects_UNSTABLE: [localStorageEffect('gpt-user-info-key')],
+    // effects_UNSTABLE: [localStorageEffect('gpt-user-info-key')],
   });
   

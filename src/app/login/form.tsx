@@ -52,10 +52,16 @@ export default function LoginForm() {
     const loginApi = useRequest(login, {
         manual: true,
         onSuccess: (rst, params) => {
-            if (rst.token && params[0].rememberMe) {
-                localStorage.setItem('gpt_token', rst.token)
+            console.log('rst', rst)
+            if (rst.status === 400) {
+                setLoginError(rst.message)
+                return
             }
-            router.push('/')
+            // debugger
+            rst.token && localStorage.setItem('gpt_token', rst.token.replace('Bearer ', '').trim())
+            setTimeout(() => {
+                router.push('/')
+            }, 0)
         },
         onError: (error) => {
             setLoginError(error.message || "登陆失败")
@@ -94,6 +100,11 @@ export default function LoginForm() {
                                 error={invalid}
                                 helperText={error?.message}
                                 placeholder='請輸入账号'
+                                sx={{
+                                    '.MuiFormHelperText-root': {
+                                        margin: 0
+                                    }
+                                }}
                                 {...field}
                             />
                         )}
@@ -116,6 +127,11 @@ export default function LoginForm() {
                                 placeholder='請輸入密碼'
                                 label='密碼'
                                 autoComplete='off'
+                                sx={{
+                                    '.MuiFormHelperText-root': {
+                                        margin: 0
+                                    }
+                                }}
                                 InputProps={{
                                     endAdornment:
                                         <InputAdornment position="end">
@@ -148,6 +164,11 @@ export default function LoginForm() {
                                     size='medium'
                                     error={invalid}
                                     helperText={error?.message}
+                                    sx={{
+                                        '.MuiFormHelperText-root': {
+                                            margin: 0
+                                        }
+                                    }}
                                     {...field}
                                 />
                             )}
@@ -162,7 +183,8 @@ export default function LoginForm() {
                                 height={52}
                                 sx={{ bgcolor: 'rgba(0,0,0,0.05' }}
 
-                            /> : <img className='block w-full h-[52px] user-select-none drag-none object-scale-down object-center outline-0 border-0 border-[transparent] text-opacity-0'
+                            /> : <img
+                                className='block w-full h-[52px] user-drag-none select-none drag-none object-scale-down object-center outline-0 border-0 border-[transparent] text-opacity-0'
                                 src={codeApi.data?.img}
                             />
                         }

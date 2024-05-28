@@ -13,6 +13,10 @@ export default function Footer() {
     const [openEditDialog, setOpenEditDialog] = useState(false)
     const userInfo = useRecoilValue(userInfoState)
 
+    if (!userInfo) {
+        return null
+    }
+
     return (
         <div className='pt-2 empty:hidden relative'>
             <div className='w-full flex-col max-w-[100%]'>

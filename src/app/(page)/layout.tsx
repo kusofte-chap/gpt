@@ -15,7 +15,7 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
     const isDesktop = useMediaQuery('(min-width: 768px)');
     return (
         <RecoilRoot>
-            <Updated />
+            {/* <Updated /> */}
             <div className='h-screen w-full overflow-hidden flex relative z-0'>
                 {isDesktop && <div className='flex-shrink-0 overflow-x-hidden bg-[#f9f9f9]'>
                     <LeftSideBar />
@@ -33,7 +33,7 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
                     <main className='relative h-full w-full flex-1 overflow-auto transition-width'>
                         {isDesktop && <MinCloseBar />}
                         <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
-                            <div className='flex-1 overflow-hidden'>
+                            <div className='flex-1'>
                                 <div className='p-0 h-full'>
                                     <div className='absolute top-0 left-0 right-0 z-10 hidden'>
                                         <PageHeader />
@@ -41,7 +41,7 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
                                     {children}
                                 </div>
                             </div>
-                            <PageFooter />
+                            <PageFooter showPrompts={false} />
                         </div>
                     </main>
                 </div>
