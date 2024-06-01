@@ -19,7 +19,7 @@ export const login = async (params:any)=>{
 
 export const queryUserInfo = async ()=>{
     try {
-        return await request.get(`/auth/info`) as any
+        return await request.get(`/api/users/info`) as any
     } catch (error) {
         console.error(`queryUserInfo error: ${error}`)
     }

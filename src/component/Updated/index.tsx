@@ -16,6 +16,5 @@ export default function Updated() {
             setUserInfo(userInfo)
         }
     })
-
     return null
 }

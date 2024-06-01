@@ -240,3 +240,79 @@ code.hljs, code[class*=language-], pre[class*=language-] {
 .prose :where(code):not(:where([class~="not-prose"],[class~="not-prose"] *))::after {
   display: none;
 }
+
+.result-streaming>:not(ol):not(ul):not(.code-span):last-child:after,.result-streaming>.code-span:last-child code:after {
+  content: "\25CF";
+  font-family: Circle,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+  line-height: normal;
+  margin-left: .25rem;
+  vertical-align: baseline
+}
+
+.result-thinking:empty:last-child:after {
+  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-animation: pulseSize 1.25s ease-in-out infinite;
+  animation: pulseSize 1.25s ease-in-out infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+
+  background-color: '#0d0d0d';
+  border-radius: 50%;
+  box-sizing: border-box;
+  content: " ";
+  display: block;
+  height: 12px;
+  position: absolute;
+  top: 7px;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-transform-origin: center;
+  transform-origin: center;
+  width: 12px;
+  will-change: transform
+}
+
+
+@supports (selector(:has(*))) {
+  .result-streaming>ol:last-child>li:last-child>ol:last-child>li:last-child:after,.result-streaming>ol:last-child>li:last-child>ol:last-child>li:last-child>ol:last-child>li:last-child:after,.result-streaming>ol:last-child>li:last-child>ol:last-child>li:last-child>ul:last-child>li:last-child:after,.result-streaming>ol:last-child>li:last-child>ul:last-child>li:last-child:after,.result-streaming>ol:last-child>li:last-child>ul:last-child>li:last-child>ol:last-child>li:last-child:after,.result-streaming>ol:last-child>li:last-child>ul:last-child>li:last-child>ul:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child>ol:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child>ol:last-child>li:last-child>ol:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child>ol:last-child>li:last-child>ul:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child>ul:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child>ul:last-child>li:last-child>ol:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child>ul:last-child>li:last-child>ul:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child[*|\:not-has\(]:after {
+      content: "\25CF";
+      font-family: Circle,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      line-height: normal;
+      margin-left: .25rem;
+      vertical-align: baseline
+  }
+
+  .result-streaming>ul:last-child>li:last-child:not(:has(*>li)):after {
+      content: "\25CF";
+      font-family: Circle,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      line-height: normal;
+      margin-left: .25rem;
+      vertical-align: baseline
+  }
+
+  .result-streaming>ol:last-child>li:last-child[*|\:not-has\(]:after {
+      content: "\25CF";
+      font-family: Circle,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      line-height: normal;
+      margin-left: .25rem;
+      vertical-align: baseline
+  }
+
+  .result-streaming>ol:last-child>li:last-child:not(:has(*>li)):after {
+      content: "\25CF";
+      font-family: Circle,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      line-height: normal;
+      margin-left: .25rem;
+      vertical-align: baseline
+  }
+}
+
+@supports not (selector(:has(*))) {
+  .result-streaming>ol:last-child>li:last-child:after,.result-streaming>ul:last-child>li:last-child:after {
+      content: "\25CF";
+      font-family: Circle,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      line-height: normal;
+      margin-left: .25rem;
+      vertical-align: baseline
+  }
+}

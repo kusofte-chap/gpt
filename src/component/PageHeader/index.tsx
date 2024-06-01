@@ -6,6 +6,7 @@ import IconMenu from '@/assets/icons/icon-menu.svg'
 import IconGpt from '@/assets/icons/icon-gpt.svg'
 import IconGpts from '@/assets/icons/icon-gpts.svg'
 import IconRight from '@/assets/icons/icon-right.svg'
+import IconShare from '@/assets/icons/icon-share.svg'
 
 enum MODEL_ENUM {
     GPT = 'gpt',
@@ -132,6 +133,11 @@ export default function PageHeader() {
         <div className='sticky top-0 mb-1.5 flex items-center justify-between z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
             <div className='flex items-center gap-2 overflow-hidden'>
                 <ModelSelect />
+            </div>
+            <div className='flex gap-2 pr-1'>
+                <button className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary'>
+                    <IconShare />
+                </button>
             </div>
         </div >
     )

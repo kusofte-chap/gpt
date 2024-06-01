@@ -15,7 +15,7 @@ const mdParser:MarkdownIt = md({
   highlight: function (str:string, lang:string) {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return `<code class="!whitespace-pre hljs language-${lang}">${hljs.highlight(lang, str, true).value}</code>`;
+        return `<code class="!whitespace-pre hljs language-${lang}">${hljs.highlight(str,{language:lang,ignoreIllegals:true}).value}</code>`;
       } catch (__) {}
     }
     return `<code class="!whitespace-pre hljs language-${lang}">${mdParser.utils.escapeHtml(str)}</code>`;
@@ -40,7 +40,7 @@ mdParser.renderer.rules.fence = function(tokens:any, idx:number, options:any, en
   const highlightedCode = options.highlight ? options.highlight(code, langName) : self.utils.escapeHtml(code);
   
   return `
-      <div class="dark bg-[#0d0d0d] rounded-md border-[0.5px] border-token-border-medium">
+      <div class="bg-[#0d0d0d] rounded-md border-[0.5px] border-token-border-medium">
         <div class="flex items-center relative text-token-text-secondary bg-[#2f2f2f] px-4 py-2 text-xs font-sans justify-between rounded-t-md">
           <span>${langName}</span>
           <div class="flex items-center">

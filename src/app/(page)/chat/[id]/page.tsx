@@ -1,11 +1,9 @@
 
+import { useRequest } from "ahooks";
 import ChatContent from ".";
 
-
-export default function ChatDetail() {
+export default function ChatDetail({ params }: { params: { id: string } }) {
   return (
-    <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
-      <ChatContent />
-    </div>
+    <ChatContent />
   );
 }

@@ -13,6 +13,7 @@ import { getHistoryList } from '@/api/gpt'
 import moment from 'moment'
 import _groupBy from 'lodash/groupBy'
 import IconLoading from '@/assets/icons/icon-loading.svg'
+import Link from 'next/link'
 
 function ChartItem({ data }: { data: IHistoryItem }) {
     const { activeItemId, anchorEl, setActiveItemId, setAnchorEl } = useContext(PopoverContext)
@@ -51,7 +52,7 @@ function ChartItem({ data }: { data: IHistoryItem }) {
                     'active:opacity-90 hover:bg-token-sidebar-surface-secondary': !isActive,
                     'opacity-90 bg-token-sidebar-surface-secondary': isActive
                 })}>
-                <a className="flex items-center gap-2 p-2" onClick={handleItemClick} data-state={isActive ? 'open' : 'closed'}>
+                <Link href={`/chat/${data.conversation_id}`} className="flex items-center gap-2 p-2" onClick={handleItemClick} data-state={isActive ? 'open' : 'closed'}>
                     <div className='relative grow overflow-hidden whitespace-nowrap'>
                         {data.title}
                         <div className={cn('absolute bottom-0 right-0 top-0 bg-gradient-to-l to-transparent from-token-sidebar-surface-primary  w-10 from-0% ', {
@@ -59,7 +60,7 @@ function ChartItem({ data }: { data: IHistoryItem }) {
                             'from-token-sidebar-surface-secondary w-20 from-60%': isActive
                         })} />
                     </div>
-                </a>
+                </Link>
                 <div className={cn('absolute bottom-0 right-0 top-0 items-center pr-2', { 'hidden group-hover:flex': !isActive, 'flex': isActive })}>
                     <button
                         type='button'
@@ -95,56 +96,56 @@ function HistoryGroup({ chatList, title }: { chatList: IHistoryItem[], title: st
 
 function List() {
     const { anchorEl } = useContext(PopoverContext)
-    // const historyApi = useRequest(getHistoryList, {
-    //     defaultParams: [{ page: 1, size: 10 }],
-    // })
+    const historyApi = useRequest(getHistoryList, {
+        defaultParams: [{ page: 1, size: 10 }],
+    })
 
-    // const genGroupKey = (date: string) => {
-    //     const diff = moment().diff(date, 'days')
-    //     if (diff === 0) {
-    //         return '今天'
-    //     }
-    //     if (diff === 1) {
-    //         return '昨天'
-    //     }
-    //     if (diff < 8) {
-    //         return `近7天`
-    //     }
-    //     if (diff < 30) {
-    //         return `近30天`
-    //     }
-    //     if (diff < 365) {
-    //         return `${moment(date).format('M月')}`
-    //     }
-    //     return moment(date).format('YYYY年')
-    // }
+    const genGroupKey = (date: string) => {
+        const diff = moment().diff(date, 'days')
+        if (diff === 0) {
+            return '今天'
+        }
+        if (diff === 1) {
+            return '昨天'
+        }
+        if (diff < 8) {
+            return `近7天`
+        }
+        if (diff < 30) {
+            return `近30天`
+        }
+        if (diff < 365) {
+            return `${moment(date).format('M月')}`
+        }
+        return moment(date).format('YYYY年')
+    }
 
-    // const list = useMemo(() => {
-    //     const _list = historyApi.data?.items.map((item: IHistoryItem) => {
-    //         return {
-    //             ...item,
-    //             dateKey: genGroupKey(item.createTime),
-    //         }
-    //     })
-    //     return _groupBy(_list, 'dateKey')
-    // }, [historyApi.data?.items])
+    const list = useMemo(() => {
+        const _list = historyApi.data?.items.map((item: IHistoryItem) => {
+            return {
+                ...item,
+                dateKey: genGroupKey(item.createTime),
+            }
+        })
+        return _groupBy(_list, 'dateKey')
+    }, [historyApi.data?.items])
 
     return (
         <>
             <div className='flex flex-col gap-2 pb-2 text-token-text-primary text-sm'>
                 <div className='empty:hidden'>
-                    {/* {
+                    {
                         Object.entries(list).map((gItem) => (
                             <HistoryGroup key={gItem[0]} title={gItem[0]} chatList={gItem[1]} />
                         ))
-                    } */}
+                    }
                 </div>
             </div>
-            {/* <div className={cn('w-full items-center justify-center flex-1', { 'hidden': !historyApi.loading, flex: historyApi.loading })}>
+            <div className={cn('w-full items-center justify-center flex-1', { 'hidden': !historyApi.loading, flex: historyApi.loading })}>
                 <span className='w-5 h-5 flex-shrink-0 animate-spin'>
                     <img src='/loading.png' />
                 </span>
-            </div> */}
+            </div>
             {Boolean(anchorEl) && <Popper
                 open
                 anchorEl={anchorEl}
