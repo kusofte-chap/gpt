@@ -2,20 +2,20 @@ import { CHAT_MODEL } from '@/interface/common';
 import { IUser } from '@/interface/user';
 import { DefaultValue, atom } from 'recoil';
 
-const localStorageEffect = (key: string) => ({ setSelf, onSet }: any) => {
-    const savedValue = sessionStorage.getItem(key);
-    if (savedValue != null) {
-      setSelf(JSON.parse(savedValue));
-    }
+// const localStorageEffect = (key: string) => ({ setSelf, onSet }: any) => {
+//     const savedValue = window.localStorage.getItem(key);
+//     if (savedValue != null) {
+//       setSelf(JSON.parse(savedValue));
+//     }
   
-    onSet((newValue: any) => {
-      if (newValue instanceof DefaultValue) {
-        sessionStorage.removeItem(key);
-      } else {
-        sessionStorage.setItem(key, JSON.stringify(newValue));
-      }
-    });
-  };
+//     onSet((newValue: any) => {
+//       if (newValue instanceof DefaultValue) {
+//         window.localStorage.removeItem(key);
+//       } else {
+//         window.localStorage.setItem(key, JSON.stringify(newValue));
+//       }
+//     });
+//   };
 
   
 export const userInfoState = atom({
@@ -28,5 +28,5 @@ export const userInfoState = atom({
   export const currentChatModelState = atom({
     key: 'gpt-selected-model-key',
     default: CHAT_MODEL.GPT_3_5_TURBO as CHAT_MODEL,
-    effects_UNSTABLE: [localStorageEffect('gpt-selected-model-key')],
+    // effects_UNSTABLE: [localStorageEffect('gpt-selected-model-key')],
   })
