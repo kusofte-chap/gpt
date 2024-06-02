@@ -10,6 +10,7 @@ import { RecoilRoot } from 'recoil'
 import Updated from '@/component/Updated'
 import { SnackbarProvider } from 'notistack';
 import MobileIconMenu from '@/component/ Drawer'
+import { CHAT_MODEL_CONVERTER } from '@/interface/common'
 
 export default function PageLayout({ children }: { children: React.ReactNode }) {
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -23,7 +24,7 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
                 <div className='relative flex-1 flex flex-col h-full max-w-full overflow-hidden'>
                     <div className='w-full min-h-[40px] sticky top-0 left-0 flex items-center justify-center border-b border-token-border-medium md:hidden'>
                         <MobileIconMenu />
-                        <ModelSelect />
+                        <ModelSelect modeList={CHAT_MODEL_CONVERTER} />
                         <button className='absolute bottom-0 right-0 top-0 flex items-center'>
                             <span className='px-3'>
                                 <IconEdit />

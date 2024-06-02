@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Menu, MenuItem, useMediaQuery } from '@mui/material';
 import cn from 'classnames'
 import IconMenu from '@/assets/icons/icon-menu.svg'
@@ -7,18 +7,24 @@ import IconGpt from '@/assets/icons/icon-gpt.svg'
 import IconGpts from '@/assets/icons/icon-gpts.svg'
 import IconRight from '@/assets/icons/icon-right.svg'
 import IconShare from '@/assets/icons/icon-share.svg'
+import { CHAT_MODEL, IModelOption } from '@/interface/common';
+import { useSetRecoilState } from 'recoil';
+import { currentChatModelState } from '@/store/atom';
 
-enum MODEL_ENUM {
-    GPT = 'gpt',
-    GPTS = 'gpts'
-}
+export function ModelSelect({ modeList }: { modeList: IModelOption[] }) {
+    const [model, setModel] = useState(modeList[0].mode)
+    const setGlobalModel = useSetRecoilState(currentChatModelState)
 
-export function ModelSelect() {
-    const [model, setModel] = useState(MODEL_ENUM.GPT)
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
     const isMobile = useMediaQuery('(max-width: 768px)');
+
+    useEffect(() => {
+        if (modeList.length > 1) {
+            setModel(modeList[0].mode)
+        }
+    }, [modeList])
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -28,8 +34,9 @@ export function ModelSelect() {
         setAnchorEl(null);
     };
 
-    const handleClickItem = (model: MODEL_ENUM) => {
+    const handleClickItem = (model: CHAT_MODEL) => {
         setModel(model)
+        setGlobalModel(model)
         setAnchorEl(null);
     };
 
@@ -45,6 +52,7 @@ export function ModelSelect() {
             anchorOrigin: { horizontal: 'left', vertical: 'bottom' }
         }
     }, [isMobile])
+
 
     return (
         <>
@@ -94,45 +102,38 @@ export function ModelSelect() {
                 }}
                 {...placement as any}
             >
-                <MenuItem onClick={() => handleClickItem(MODEL_ENUM.GPT)}>
-                    <div className='flex-1 flex gap-2 items-center justify-between m-1.5 rounded p-2.5 text-sm cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                        <div className='flex-shrink-0 '>
-                            <IconGpt />
-                        </div>
-                        <div className='flex flex-col flex-1'>
-                            GPT
-                            <div className='text-token-text-tertiary text-xs'>非常适合用于日常任务</div>
-                        </div>
-                        <div className={cn('flex-shrink-0 w-4 h-4 hidden', { '!block': model === MODEL_ENUM.GPT })}>
-                            <IconRight />
-                        </div>
-                    </div>
-                </MenuItem>
-                <MenuItem onClick={() => handleClickItem(MODEL_ENUM.GPTS)}>
-                    <div className='flex-1 flex gap-2 items-center m-1.5 rounded p-2.5 text-sm cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                        <div className='flex-shrink-0 '>
-                            <IconGpts />
-                        </div>
-                        <div className='flex flex-col flex-1 text-sm'>
-                            AI助手
-                            <div className='text-token-text-tertiary text-xs'>我们最智能的模型和更多内容</div>
-                        </div>
-                        <div className={cn('flex-shrink-0 w-4 h-4 hidden', { '!block': model === MODEL_ENUM.GPTS })}>
-                            <IconRight />
-                        </div>
-                    </div>
-                </MenuItem>
+
+                {
+                    modeList.map((item) => {
+                        return (
+                            <MenuItem key={item.mode} onClick={() => handleClickItem(item.mode)}>
+                                <div className='flex-1 flex gap-2 items-center justify-between m-1.5 rounded p-2.5 text-sm cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                                    <div className='flex-shrink-0 '>
+                                        <IconGpt />
+                                    </div>
+                                    <div className='flex flex-col flex-1'>
+                                        {item.mode}
+                                        <div className='text-token-text-tertiary text-xs'>{item.description}</div>
+                                    </div>
+                                    <div className={cn('flex-shrink-0 w-4 h-4 hidden', { '!block': model === item.mode })}>
+                                        <IconRight />
+                                    </div>
+                                </div>
+                            </MenuItem>
+                        )
+                    })
+                }
             </Menu>
         </>
     )
 
 }
 
-export default function PageHeader() {
+export default function PageHeader({ modeList }: { modeList: IModelOption[] }) {
     return (
         <div className='sticky top-0 mb-1.5 flex items-center justify-between z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
             <div className='flex items-center gap-2 overflow-hidden'>
-                <ModelSelect />
+                <ModelSelect modeList={modeList} />
             </div>
             <div className='flex gap-2 pr-1'>
                 <button className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary'>

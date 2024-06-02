@@ -25,7 +25,7 @@ request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 request.interceptors.response.use(
     response => {
         if (response.data.status === 401) {
-            // handleLogout()
+            handleLogout()
         }
         return response.data
     },

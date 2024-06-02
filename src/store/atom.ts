@@ -1,3 +1,4 @@
+import { CHAT_MODEL } from '@/interface/common';
 import { IUser } from '@/interface/user';
 import { DefaultValue, atom } from 'recoil';
 
@@ -23,3 +24,9 @@ export const userInfoState = atom({
     // effects_UNSTABLE: [localStorageEffect('gpt-user-info-key')],
   });
   
+
+  export const currentChatModelState = atom({
+    key: 'gpt-selected-model-key',
+    default: CHAT_MODEL.GPT_3_5_TURBO as CHAT_MODEL,
+    effects_UNSTABLE: [localStorageEffect('gpt-selected-model-key')],
+  })

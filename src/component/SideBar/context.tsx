@@ -15,17 +15,18 @@ export function PopoverProvider({ children }: { children: ReactNode }) {
     const [activeItemId, setActiveItemId] = useState(null)
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
 
-    const value = useMemo(() => ({
+    const values = useMemo(() => ({
         openItemId,
         activeItemId,
         anchorEl,
+
         setOpenItemId,
         setActiveItemId,
         setAnchorEl
     }), [openItemId, activeItemId, anchorEl, setOpenItemId, setActiveItemId, setAnchorEl])
 
     return (
-        <PopoverContext.Provider value={value as any}>
+        <PopoverContext.Provider value={values as any}>
             {children}
         </PopoverContext.Provider>
     )

@@ -6,15 +6,17 @@ export const getDefaultPrompts = async ()=>{
         return await request.get(`/api/prompt_library`) as any
     } catch (error) {
         console.error(`getDefaultPrompts error: ${error}`)
+        return new Error(error as any)
     }
 }
 
 // 获取历史对话
-export const getHistoryList = async (params:{ page:number,size:number})=>{
+export const getHistoryList = async (page:number)=>{
     try {
-        return await request.get(`/api/conversations`) as any
+        return await request.get(`/api/conversations`,{params:{page,size:28}}) as any
     } catch (error) {
         console.error(`getHistoryList error: ${error}`)
+        return new Error(error as any)
     }
 }
 
@@ -25,5 +27,30 @@ export const getHistoryDetail = async (conversationId:string)=>{
         return await request.get(`/api/conversations/${conversationId}`)  as any
     } catch (error) {
         console.error(`getHistoryDetail error: ${error}`)
+        return new Error(error as any)
+    }
+}
+
+// 重命名对话名称
+export const renameConversation = async (conversationId:string,title:string)=>{
+    try {
+        return await request.patch(`/api/conversation/${conversationId}`,{
+            title
+        })  as any
+    } catch (error) {
+        console.error(`renameConversation error: ${error}`)
+        return new Error(error as any)
+    }
+}
+
+// 删除对话
+export const deleteConversation = async (conversationId:string)=>{
+    try {
+        return await request.patch(`/api/conversation/${conversationId}`,{
+            is_visible:false
+        })  as any
+    } catch (error) {
+        console.error(`deleteConversation error: ${error}`)
+        return new Error(error as any)
     }
 }

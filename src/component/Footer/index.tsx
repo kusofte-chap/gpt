@@ -120,6 +120,7 @@ export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPr
               </div>
               <div className='overflow-hidden [&:has(textarea:focus)]:border-token-border-xheavy [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)] flex flex-col w-full flex-grow relative border dark:text-white rounded-2xl bg-token-main-surface-primary border-token-border-medium'>
                 <textarea
+                  id="prompt-input"
                   disabled={isStreaming}
                   maxLength={2000}
                   ref={inputRef as any}
@@ -127,6 +128,12 @@ export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPr
                   placeholder='给“ChatGPT”发送消息'
                   onChange={(e) => {
                     setInputPrompt(e.target.value.slice(0, 2000))
+                  }}
+                  onKeyDownCapture={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleOnSend()
+                    }
                   }}
                 />
 

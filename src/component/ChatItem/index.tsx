@@ -9,9 +9,9 @@ import IconRestart from '@/assets/icons/icon-restart.svg'
 import IconModel from '@/assets/icons/icon-model.svg'
 import mdParser from '@/until/mdit'
 
-export function SelfChatItem({ id, index, content }: { id: string, index: number, content: string }) {
+export function SelfChatItem({ id, index, content, chatId }: { id: string, index: number, content: string, chatId?: string }) {
     return (
-        <div className='w-full text-token-text-primary' data-user-index={`${index}`}>
+        <div className='w-full text-token-text-primary' data-user-index={index} data-chat-id={chatId}>
             <div className='py-2 px-3 text-base m-auto md:px-5 lg:px-1 xl:px-5'>
                 <div className='mx-auto flex flex-1 gap-3 text-base md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'>
                     <div className='flex-shrink-0 flex flex-col relative items-end'>
@@ -47,11 +47,12 @@ export function SelfChatItem({ id, index, content }: { id: string, index: number
 interface IGptChatItemProps {
     index: number
     msgId?: string
+    chatId?: string
     md?: string
     selfRender?: boolean
 }
 
-export function GptChatItem({ index, selfRender = false, msgId = '', md }: IGptChatItemProps) {
+export function GptChatItem({ index, selfRender = false, msgId = '', md, chatId }: IGptChatItemProps) {
     const isRender = useRef(false)
 
     useEffect(() => {
@@ -64,7 +65,7 @@ export function GptChatItem({ index, selfRender = false, msgId = '', md }: IGptC
     }, [selfRender, msgId, md])
 
     return (
-        <div className='w-full text-token-text-primary' data-gpt-index={`${index}`}>
+        <div className='w-full text-token-text-primary' data-gpt-index={index} data-chat-id={chatId}>
             <div className='py-2 px-3 text-base m-auto md:px-5 lg:px-1 xl:px-5'>
                 <div className='mx-auto flex flex-1 gap-3 text-base md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'>
                     <div className='flex-shrink-0 flex flex-col relative items-end'>

@@ -1,9 +1,7 @@
-
-import { useRequest } from "ahooks";
-import ChatContent from ".";
+import ChatGptWindow from ".";
 
 export default function ChatDetail({ params }: { params: { id: string } }) {
   return (
-    <ChatContent />
+    <ChatGptWindow conversationId={params.id} isNewChat={false} />
   );
 }
