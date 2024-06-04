@@ -3,7 +3,7 @@ import qs from "qs";
 import { handleLogout } from "../until";
 
 const request = axios.create({
-    baseURL: `http://47.89.155.63:8089`
+    baseURL: `http://93.127.216.22:8089`
 });
 
 // const token ='eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIwMTRkZDQ1NjFlZmM0ODRlYjM1MjdhZDljMzc0ZTNmZiIsInVzZXIiOiJ0ZXN0MjAyNCIsInN1YiI6InRlc3QyMDI0In0.-z49oqY7EaCmqdJV1wsb4Q03PesWImizotG2ZFGXo7jwWG_rllxivpnz_feqDqyrmEhx6ztyVZASnE882IU_vQ'

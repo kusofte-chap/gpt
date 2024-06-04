@@ -140,7 +140,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
         const ctl = new AbortController();
         ctrRef.current = ctl
         setIsStreaming(true)
-        fetchEventSource(`http://47.89.155.63:8089/api/conversation`, {
+        fetchEventSource(`http://93.127.216.22:8089/api/conversation`, {
             method: "POST",
             signal: ctl.signal,
             headers: {
