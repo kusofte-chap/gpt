@@ -1,3 +1,5 @@
+import { CHAT_MODEL } from "./common"
+
 export enum CHAT_ROLE {
     USER = 'user',
     ASSISTANT = 'assistant'
@@ -40,4 +42,12 @@ export interface IRecordStreamItem {
 export interface ICreateChatItem {
     type: MESSAGE_TYPE
     title:string
+}
+
+export interface IGImageItem {
+    "createTime": string,
+    "model": CHAT_MODEL,
+    "originalUrl": string,
+    "prompt": string,
+    "thumbUrl": string
 }

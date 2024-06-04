@@ -19,6 +19,10 @@ interface IPrompt {
 interface IGlobalInputForm {
   displayPrompts?: boolean
   isStreaming?: boolean
+  placeHolder?: string
+  hiddenFileUpload?: boolean
+  hiddenGptTip?: boolean
+  containerClass?: string
   onStop?: () => void
   onSend?: (text: string) => void
 }
@@ -86,7 +90,18 @@ function RecommendPrompts({ prompts = [] }: { prompts: IPrompt[] }) {
   )
 }
 
-export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPrompts = true }: IGlobalInputForm) {
+export default function GlobalInputForm(props: IGlobalInputForm) {
+  const {
+    onSend,
+    onStop,
+    isStreaming,
+    placeHolder,
+    hiddenFileUpload = false,
+    hiddenGptTip = false,
+    displayPrompts = true,
+    containerClass = 'md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'
+  } = props
+
   const [inputPrompt, setInputPrompt] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>()
 
@@ -112,7 +127,7 @@ export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPr
   return (
     <div className='w-full md:pt-0 md:border-transparent'>
       <div className="px-3 text-base md:px-4 m-auto lg:px-1 xl:px-5">
-        <div className='mx-auto flex flex-1 gap-3 text-base juice:gap-4 juice:md:gap-6 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'>
+        <div className={`mx-auto flex flex-1 gap-3 text-base ${containerClass}`}>
           <div className='w-full'>
             <div className='relative flex h-full max-w-full flex-1 flex-col'>
               <div className={cn('absolute bottom-full left-0 right-0 transition-all ease duration-300 opacity-0', { 'opacity-100': !loading })} >
@@ -125,7 +140,7 @@ export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPr
                   maxLength={2000}
                   ref={inputRef as any}
                   className='m-0 w-full h-[44px] md:h-[52px] resize-none border-0 bg-transparent focus:ring-0 focus-visible:ring-0 dark:bg-transparent py-[10px] pr-10 md:py-3.5 md:pr-12  max-h-52 placeholder-black/50  pl-10 md:pl-[55px]'
-                  placeholder='给“ChatGPT”发送消息'
+                  placeholder={placeHolder || '给“ChatGPT”发送消息'}
                   onChange={(e) => {
                     setInputPrompt(e.target.value.slice(0, 2000))
                   }}
@@ -136,12 +151,13 @@ export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPr
                     }
                   }}
                 />
-
-                <div className='absolute bottom-2.5 left-2 md:bottom-3.5 md:left-4'>
-                  <button className='flex items-center justify-center text-token-text-primary juice:h-8 juice:w-8 dark:text-white juice:rounded-full focus-visible:outline-black dark:focus-visible:outline-white juice:mb-1 juice:ml-[3px]'>
-                    <IconFile />
-                  </button>
-                </div>
+                {
+                  !hiddenFileUpload && <div className='absolute bottom-2.5 left-2 md:bottom-3.5 md:left-4'>
+                    <button className='flex items-center justify-center text-token-text-primary juice:h-8 juice:w-8 dark:text-white juice:rounded-full focus-visible:outline-black dark:focus-visible:outline-white juice:mb-1 juice:ml-[3px]'>
+                      <IconFile />
+                    </button>
+                  </div>
+                }
                 <button
                   disabled={isStreaming ? false : !enabled}
                   onClick={handleOnSend}
@@ -153,9 +169,9 @@ export default function GlobalInputForm({ onSend, onStop, isStreaming, displayPr
           </div>
         </div>
       </div>
-      <div className='relative px-2 py-2 text-center text-xs text-token-text-secondary md:px-[60px]'>
+      {!hiddenGptTip && <div className='relative px-2 py-2 text-center text-xs text-token-text-secondary md:px-[60px]'>
         <span>ChatGPT 也可能会犯错。请核查重要信息。</span>
-      </div>
+      </div>}
     </div >
   )
 }

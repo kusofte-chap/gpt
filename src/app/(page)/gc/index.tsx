@@ -1,151 +1,38 @@
 'use client'
 
-import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import ScrollToBottom, { useScrollToBottom, useSticky } from 'react-scroll-to-bottom';
+import React, { useEffect, useRef, useState } from 'react'
 import PageHeader from '@/component/PageHeader';
-import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
-import mdParser from '@/until/mdit';
 import GlobalInputForm from '@/component/Footer';
-import { EventSourceMessage, EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
-import { CHAT_ROLE, IStreamItem } from '@/interface/chat';
-
 import 'highlight.js/styles/atom-one-dark.css';
-import { useMediaQuery } from '@mui/material';
+import { Skeleton, useMediaQuery } from '@mui/material';
 import { css } from '@emotion/css'
 import { IMAGE_MODE_CONVERTER } from '@/interface/common';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import 'photoswipe/style.css';
+import { generateImage } from '@/api/gpt';
 import { useRecoilValue } from 'recoil';
 import { currentChatModelState } from '@/store/atom';
+import { IGImageItem } from '@/interface/chat';
+import toast from '@/until/message';
 
-class RetriableError extends Error { }
 
-class FatalError extends Error { }
-
-const scrollBottomRoot = css({
-    position: 'relative',
-    height: '100%',
-    '& > .react-scroll-to-bottom': {
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto'
-    }
-})
-
-const streamData: any[] = []
 export default function AiGcWindow() {
     const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [chatList, setChatList] = useState<any[]>([])
-    const messageQueue = useRef<IStreamItem[]>([])
-    const currentChatModel = useRecoilValue(currentChatModelState)
 
-    const messageBuffer = useRef<string>('')
-    const cacheNode = useRef<HTMLDivElement | null>(null)
     const ctrRef = useRef<AbortController | null>(null)
+    const [isCreating, setIsCreating] = useState(false)
+    const currentModel = useRecoilValue(currentChatModelState)
+    const [imageList, setImageList] = useState<IGImageItem[]>([])
 
-    const [isStreaming, setIsStreaming] = useState(false)
-    const currentChatIndex = useRef<number>(0)
-    const hstRecordLength = useRef<number>(0)
-
-    const updateCacheNode = (htmlContent: string, msg_id: string) => {
-        if (cacheNode.current) {
-            cacheNode.current.innerHTML = htmlContent;
+    const onSend = async (inputPrompt: string) => {
+        setIsCreating(true)
+        const rst = await generateImage({ prompt: inputPrompt, model: currentModel })
+        if (rst) {
+            setImageList([...imageList, rst])
         } else {
-            cacheNode.current = document.createElement('div');
-            cacheNode.current.setAttribute('class', 'result-streaming markdown prose w-full break-words');
-            cacheNode.current.setAttribute('data-message-id', msg_id);
-            const mdParent = document.querySelector(`[data-gpt-index="${currentChatIndex.current}"] div[data-role="assistant"]`);
-            mdParent?.appendChild(cacheNode.current);
-            cacheNode.current.innerHTML = htmlContent;
+            toast.error('生成失败')
         }
-    };
-
-    const renderRoleChat = (data: IStreamItem) => {
-        if (data.message.role === CHAT_ROLE.USER) {
-            setChatList((old) => {
-                const newChatList = [...old, {
-                    id: data.message.message_id,
-                    content: data.message.content.parts[0],
-                }]
-                currentChatIndex.current = newChatList.length + hstRecordLength.current + 1
-                return newChatList
-            });
-        } else if (data.message?.role === CHAT_ROLE.ASSISTANT) {
-            messageQueue.current.push(data);
-        }
-    }
-
-    const startTyping = () => {
-        let processingQueue = true
-        const timer = setInterval(() => {
-            if (messageQueue.current.length === 0) {
-                return
-            };
-
-            if (!processingQueue) {
-                clearInterval(timer);
-                return
-            }
-            const dataStream = messageQueue.current.shift() as IStreamItem;
-            try {
-                if (dataStream.message && dataStream.message.content && dataStream.message.content.parts) {
-                    messageBuffer.current += dataStream.message.content.parts[0];
-                    if (dataStream.message.status === 'in_progress') {
-                        updateCacheNode(mdParser.render(messageBuffer.current), dataStream.message.message_id);
-                    } else if (dataStream.message.status === 'finished_successfully' || dataStream.message.status === 'finished') {
-                        messageBuffer.current = '';
-                        if (cacheNode.current) {
-                            cacheNode.current.classList.remove("result-streaming");
-                        }
-                        cacheNode.current = null;
-                        processingQueue = false
-                        setIsStreaming(false)
-                    }
-                }
-            } catch (error) {
-                console.error('error', 11);
-            } finally {
-
-            }
-        }, 50)
-    }
-
-
-    const onSend = (inputPrompt: string) => {
-        const ctl = new AbortController();
-        ctrRef.current = ctl
-        setIsStreaming(true)
-        fetchEventSource(`http://93.127.216.22:8089/api/images/generations`, {
-            method: "POST",
-            signal: ctl.signal,
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("gpt_token")}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                "prompt": inputPrompt,
-                "model": currentChatModel
-            }),
-            async onopen(response) {
-                if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
-                    return
-                } else if (response.status >= 400 && response.status < 500 && response.status !== 429) {
-                    throw new FatalError();
-                } else {
-                    throw new RetriableError();
-                }
-            },
-            onmessage: (event: EventSourceMessage) => {
-                console.log(event.data)
-                streamData.push(JSON.parse(event.data))
-
-            },
-            onclose() {
-                ctl.abort();
-            },
-            onerror: (event: any) => {
-                ctl.abort();
-                setIsStreaming(false)
-            }
-        });
+        setIsCreating(false)
     }
 
     const onStop = () => {
@@ -154,41 +41,144 @@ export default function AiGcWindow() {
         }
     }
 
+    useEffect(() => {
+        let lightbox: PhotoSwipeLightbox | null = new PhotoSwipeLightbox({
+            gallery: '#gallery-started',
+            children: 'a',
+            pswpModule: () => import('photoswipe'),
+            showHideAnimationType: 'zoom',
+            initialZoomLevel: 'fit',
+            secondaryZoomLevel: 1.5,
+            maxZoomLevel: 1,
+        });
+
+        lightbox.on('uiRegister', function () {
+            lightbox?.pswp?.ui?.registerElement({
+                name: 'download-button',
+                order: 8,
+                isButton: true,
+                tagName: 'a',
+                html: {
+                    isCustomSVG: true,
+                    inner: '<path d="M20.5 14.3 17.1 18V10h-2.2v7.9l-3.4-3.6L10 16l6 6.1 6-6.1ZM23 23H9v2h14Z" id="pswp__icn-download"/>',
+                    outlineID: 'pswp__icn-download'
+                },
+                onInit: (el: any, pswp: any) => {
+                    el.setAttribute('download', '');
+                    el.setAttribute('target', '_blank');
+                    el.setAttribute('rel', 'noopener');
+                    pswp.on('change', () => {
+                        el.href = pswp.currSlide.data.src;
+                    });
+                }
+            });
+        });
+        lightbox.init();
+
+        return () => {
+            lightbox?.destroy();
+            lightbox = null;
+        };
+    }, []);
 
     return (
-        <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
-            <div className='flex-1 overflow-hidden'>
-                <ScrollToBottom
-                    className={scrollBottomRoot}
-                    followButtonClassName='anchor-follow-button'
-                    initialScrollBehavior='smooth'
-                >
-                    <div className='flex flex-col text-sm pb-9'>
-                        {isDesktop && <PageHeader
-                            modeList={IMAGE_MODE_CONVERTER}
-                        />}
-                        {
-                            chatList.map((item, index) => {
-                                const numId = hstRecordLength.current + index * 2 + 1
-                                return (
-                                    <Fragment key={numId}>
-                                        <SelfChatItem content={item.content} index={numId} id={item.id} />
-                                        <GptChatItem index={numId + 1} />
-                                    </Fragment>
-                                )
-                            })
-                        }
-
-                    </div>
-                </ScrollToBottom>
-
+        <div className='flex h-full flex-col focus-visible:outline-0'>
+            <div className='w-full h-[56px] hidden md:block'>
+                {isDesktop && <PageHeader modeList={IMAGE_MODE_CONVERTER} />}
             </div>
-            <GlobalInputForm
-                displayPrompts={false}
-                isStreaming={isStreaming}
-                onSend={onSend}
-                onStop={onStop}
-            />
+            <div className='flex-shrink-0 mb-4 mt-4 md:mt-0'>
+                <GlobalInputForm
+                    isStreaming={isCreating}
+                    onSend={onSend}
+                    onStop={onStop}
+                    displayPrompts={false}
+                    hiddenFileUpload={true}
+                    hiddenGptTip={true}
+                    containerClass='md:max-w-3xl lg:max-w-[60rem] xl:max-w-[68rem]'
+                    placeHolder="巴洛克式绘画"
+                />
+            </div>
+            <div className='flex-1 overflow-y-auto pb-9'>
+                <div className='py-0 px-3 text-base m-auto md:py-2 md:px-5 lg:px-1 xl:px-5'>
+                    <div id='gallery-started' className="pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[60rem] xl:max-w-[68rem] m-auto">
+                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg'
+                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg"
+                            data-pswp-width="1024"
+                            data-pswp-height="1024"
+                            className='relative group overflow-hidden'
+                        >
+                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
+                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
+                                </p>
+                            </div>
+                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-200.jpg" alt="" />
+                        </a>
+                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/7/img-2500.jpg'
+                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/7/img-2500.jpg"
+                            data-pswp-width="1024"
+                            data-pswp-height="1024"
+                            className='relative group overflow-hidden'
+                        >
+                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
+                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
+                                </p>
+                            </div>
+                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/7/img-200.jpg" alt="" />
+                        </a>
+                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg'
+                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg"
+                            data-pswp-width="1024"
+                            data-pswp-height="1024"
+                            className='relative group overflow-hidden'
+                        >
+                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
+                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
+                                </p>
+                            </div>
+                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-200.jpg" alt="" />
+                        </a>
+                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg'
+                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg"
+                            data-pswp-width="1024"
+                            data-pswp-height="1024"
+                            className='relative group overflow-hidden'
+                        >
+                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
+                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
+                                </p>
+                            </div>
+                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-200.jpg" alt="" />
+                        </a>
+                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg'
+                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg"
+                            data-pswp-width="1024"
+                            data-pswp-height="1024"
+                            className='relative group overflow-hidden'
+                        >
+                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
+                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
+                                </p>
+                            </div>
+                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-200.jpg" alt="" />
+                        </a>
+                        <a className='w-full h-[200px] object-cover object-center rounded-lg'>
+                            <Skeleton variant="rectangular" width="100%" height='100%' className='rounded-lg'
+                                sx={{
+                                    '&.MuiSkeleton-root>*': {
+                                        visibility: 'visible',
+                                    }
+                                }}>
+                                <div className='w-full h-[200px] flex items-center justify-center text-[18px] font-thin text-[#000]'>生成中...</div>
+                            </Skeleton>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
