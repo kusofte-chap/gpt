@@ -1,20 +1,17 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
+import { useRecoilValue } from 'recoil';
+import PhotoSwipeLightbox from 'photoswipe/lightbox';
+import { Skeleton, useMediaQuery } from '@mui/material';
 import PageHeader from '@/component/PageHeader';
 import GlobalInputForm from '@/component/Footer';
-import 'highlight.js/styles/atom-one-dark.css';
-import { Skeleton, useMediaQuery } from '@mui/material';
-import { css } from '@emotion/css'
-import { IMAGE_MODE_CONVERTER } from '@/interface/common';
-import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import 'photoswipe/style.css';
-import { generateImage } from '@/api/gpt';
-import { useRecoilValue } from 'recoil';
 import { currentChatModelState } from '@/store/atom';
+import { IMAGE_MODE_CONVERTER } from '@/interface/common';
+import { generateImage } from '@/api/gpt';
 import { IGImageItem } from '@/interface/chat';
 import toast from '@/until/message';
-
+import 'photoswipe/style.css';
 
 export default function AiGcWindow() {
     const isDesktop = useMediaQuery('(min-width: 768px)');
