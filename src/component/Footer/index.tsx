@@ -24,11 +24,17 @@ interface IGlobalInputForm {
   hiddenGptTip?: boolean
   containerClass?: string
   onStop?: () => void
-  onSend?: (text: string) => void
+  onSend: (text: string) => void
 }
 
 
-function RecommendPrompts({ prompts = [] }: { prompts: IPrompt[] }) {
+function RecommendPrompts({
+  prompts = [],
+  onPromptClick
+}: {
+  prompts: IPrompt[]
+  onPromptClick: (prompt: string) => void
+}) {
   const isSmDevice = useMediaQuery('(max-width: 640px)')
   const show = (prompts.length > 0)
 
@@ -45,7 +51,10 @@ function RecommendPrompts({ prompts = [] }: { prompts: IPrompt[] }) {
             {
               prompts?.slice(0, isSmDevice ? 1 : 2).map((item, index) => {
                 return (
-                  <button key={index} className='relative group w-full whitespace-nowrap rounded-xl px-4 py-3 text-left text-token-text-primary md:whitespace-normal border-token-border-medium border hover:bg-[#f9f9f9]'>
+                  <button
+                    key={index}
+                    onClick={() => onPromptClick(item.prompt)}
+                    className='relative group w-full whitespace-nowrap rounded-xl px-4 py-3 text-left text-token-text-primary md:whitespace-normal border-token-border-medium border hover:bg-[#f9f9f9]'>
                     <div className='flex'>
                       <div className='flex flex-col overflow-hidden'>
                         <div className='truncate'>{item.title}</div>
@@ -115,7 +124,16 @@ export default function GlobalInputForm(props: IGlobalInputForm) {
     inputRef.current!.value = ''
   }
 
-  const { data, loading } = useRequest<IPrompt[], any>(getDefaultPrompts)
+  const { data, loading, run } = useRequest<IPrompt[], any>(getDefaultPrompts, {
+    manual: true,
+  })
+
+  useEffect(() => {
+    if (displayPrompts) {
+      run()
+    }
+  }, [])
+
   const prompts = useMemo(() => {
     return Array.isArray(data) ? data.slice() : []
   }, [data])
@@ -131,7 +149,7 @@ export default function GlobalInputForm(props: IGlobalInputForm) {
           <div className='w-full'>
             <div className='relative flex h-full max-w-full flex-1 flex-col'>
               <div className={cn('absolute bottom-full left-0 right-0 transition-all ease duration-300 opacity-0', { 'opacity-100': !loading })} >
-                {displayPrompts && <RecommendPrompts prompts={prompts} />}
+                {displayPrompts && <RecommendPrompts prompts={prompts} onPromptClick={onSend} />}
               </div>
               <div className='overflow-hidden [&:has(textarea:focus)]:border-token-border-xheavy [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)] flex flex-col w-full flex-grow relative border dark:text-white rounded-2xl bg-token-main-surface-primary border-token-border-medium'>
                 <textarea

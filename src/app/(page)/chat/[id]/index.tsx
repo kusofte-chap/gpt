@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import ScrollToBottom, { useScrollToBottom, useSticky } from 'react-scroll-to-bottom';
+import ScrollToBottom from 'react-scroll-to-bottom';
 import PageHeader from '@/component/PageHeader';
 import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
 import mdParser from '@/until/mdit';
@@ -14,7 +14,7 @@ import { useMediaQuery } from '@mui/material';
 import { css } from '@emotion/css'
 import { CHAT_MODEL_CONVERTER } from '@/interface/common';
 import Welcome from '@/component/Welcome';
-import { useRouter } from 'next/navigation';
+
 
 class RetriableError extends Error { }
 
@@ -36,7 +36,6 @@ interface IContentProps {
 }
 
 export default function ChatGptWindow({ conversationId, isNewChat }: IContentProps) {
-    const router = useRouter()
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [chatList, setChatList] = useState<any[]>([])
     const [isDirty, setIsDirty] = useState(false)
@@ -46,8 +45,6 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     const messageBuffer = useRef<string>('')
     const cacheNode = useRef<HTMLDivElement | null>(null)
     const ctrRef = useRef<AbortController | null>(null)
-
-    const isReplacedPath = useRef(false)
 
     const [isStreaming, setIsStreaming] = useState(false)
     const currentChatIndex = useRef<number>(0)
@@ -164,9 +161,8 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
                     return
                 } else {
                     const dataStream = JSON.parse(event.data);
-
                     if (dataStream?.type == MESSAGE_TYPE.TITLE_GENERATION) {
-                        console.log('生成左侧对话标题');
+                        history.pushState({}, "", `/chat/${dataStream.conversation_id}`);
                     } else {
                         renderRoleChat(dataStream);
                     }

@@ -55,12 +55,14 @@ export const deleteConversation = async (conversationId:string)=>{
     }
 }
 
+
+// 生成图片
 export const generateImage = async (params: {
     model: string,
     prompt:string
 })=>{
     try {
-        return await request.post(`/api/image`,params)  as any
+        return await request.post(`/api/images/generations`,params)  as any
     } catch (error) {
         console.error(`generateImage error: ${error}`)
         return new Error(error as any)

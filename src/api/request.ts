@@ -1,12 +1,12 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import qs from "qs";
 import { handleLogout } from "../until";
-
+// http://47.89.155.63:8089/api/prompt_library
+// `http://93.127.216.22:8089`
 const request = axios.create({
     baseURL: `http://93.127.216.22:8089`
 });
 
-// const token ='eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiIwMTRkZDQ1NjFlZmM0ODRlYjM1MjdhZDljMzc0ZTNmZiIsInVzZXIiOiJ0ZXN0MjAyNCIsInN1YiI6InRlc3QyMDI0In0.-z49oqY7EaCmqdJV1wsb4Q03PesWImizotG2ZFGXo7jwWG_rllxivpnz_feqDqyrmEhx6ztyVZASnE882IU_vQ'
 // 请求拦截器
 request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     if (localStorage.getItem('gpt_token')?.trim() && config.url?.startsWith('/api')) {

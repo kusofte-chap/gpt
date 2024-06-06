@@ -44,10 +44,13 @@ export interface ICreateChatItem {
     title:string
 }
 
-export interface IGImageItem {
-    "createTime": string,
-    "model": CHAT_MODEL,
-    "originalUrl": string,
-    "prompt": string,
-    "thumbUrl": string
+export interface IImageItem {
+    createTime: string
+    model: CHAT_MODEL
+    originalUrl: string
+    originalSize: string
+    prompt: string
+    thumbSize: string
+    thumbUrl: string
+    generationsId?: string
 }

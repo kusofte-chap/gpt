@@ -1,7 +1,5 @@
 
 import React from 'react'
-import Logo from '@/assets/logo.svg'
-import GlobalInputForm from '@/component/Footer'
 import ChatGptWindow from './chat/[id]'
 
 export default function Home() {

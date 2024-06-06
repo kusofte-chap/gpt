@@ -11,7 +11,10 @@ import { CHAT_MODEL, IModelOption } from '@/interface/common';
 import { useSetRecoilState } from 'recoil';
 import { currentChatModelState } from '@/store/atom';
 
-export function ModelSelect({ modeList }: { modeList: IModelOption[] }) {
+export function ModelSelect({
+    modeList,
+    onChange
+}: { modeList: IModelOption[], onChange?: (m: CHAT_MODEL) => void }) {
     const [model, setModel] = useState(modeList[0].mode)
     const setGlobalModel = useSetRecoilState(currentChatModelState)
 
@@ -36,6 +39,7 @@ export function ModelSelect({ modeList }: { modeList: IModelOption[] }) {
 
     const handleClickItem = (model: CHAT_MODEL) => {
         setModel(model)
+        onChange?.(model)
         setGlobalModel(model)
         setAnchorEl(null);
     };
@@ -129,11 +133,11 @@ export function ModelSelect({ modeList }: { modeList: IModelOption[] }) {
 
 }
 
-export default function PageHeader({ modeList }: { modeList: IModelOption[] }) {
+export default function PageHeader({ modeList, onChangeModel }: { modeList: IModelOption[], onChangeModel?: (m: CHAT_MODEL) => void }) {
     return (
         <div className='sticky top-0 mb-1.5 flex items-center justify-between z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
             <div className='flex items-center gap-2 overflow-hidden'>
-                <ModelSelect modeList={modeList} />
+                <ModelSelect modeList={modeList} onChange={onChangeModel} />
             </div>
             <div className='flex gap-2 pr-1'>
                 <button className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary'>

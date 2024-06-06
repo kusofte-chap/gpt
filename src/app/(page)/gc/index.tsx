@@ -1,35 +1,151 @@
 'use client'
-
-import React, { useEffect, useRef, useState } from 'react'
+import ScrollToBottom, { useScrollToBottom, useSticky } from 'react-scroll-to-bottom'
+import React, { Fragment, useEffect, useRef, useState } from 'react'
 import { useRecoilValue } from 'recoil';
+import { useRequest } from 'ahooks';
+import { getImageList, getOriginUrl } from '@/api/gc';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
 import { Skeleton, useMediaQuery } from '@mui/material';
 import PageHeader from '@/component/PageHeader';
 import GlobalInputForm from '@/component/Footer';
 import { currentChatModelState } from '@/store/atom';
-import { IMAGE_MODE_CONVERTER } from '@/interface/common';
+import { CHAT_MODEL, IMAGE_MODE_CONVERTER } from '@/interface/common';
 import { generateImage } from '@/api/gpt';
-import { IGImageItem } from '@/interface/chat';
+import { IImageItem } from '@/interface/chat';
 import toast from '@/until/message';
+import { css } from '@emotion/css'
 import 'photoswipe/style.css';
 
-export default function AiGcWindow() {
-    const isDesktop = useMediaQuery('(min-width: 768px)');
+const scrollBottomRoot = css({
+    width: '100%',
+    height: '100%',
+    '&>div': {
+        width: '100%',
+        height: '100%',
+        overflowY: 'auto'
+    }
+})
 
+const LoadingSkeleton = () => {
+    return (
+        <>
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+            <Skeleton variant="rounded" width="100%" height="200px" />
+        </>
+    )
+}
+
+
+const CreatingSkeleton = ({ isCreating }: { isCreating: boolean }) => {
+    if (!isCreating) {
+        return
+    }
+    return (
+        <div className='w-full h-[200px] rounded-lg'>
+            <Skeleton variant="rectangular" width="100%" height='100%' className='rounded-lg'
+                sx={{
+                    '&.MuiSkeleton-root>*': {
+                        visibility: 'visible',
+                    }
+                }}>
+                <div className='w-full h-[200px] flex items-center justify-center text-[18px] font-thin text-[#000]'>生成中...</div>
+            </Skeleton>
+        </div>
+    )
+}
+
+
+function getDownLoadUrl(url: string) {
+    const urlObject = new URL(url)
+    return `${urlObject.origin}${urlObject.pathname}?attname=&${urlObject.searchParams.toString()}`
+}
+
+function MediaImage({ data }: { data: IImageItem }) {
+    const [loading, setLoading] = useState(false)
+    const [originalUrl, setOriginalUrl] = useState('')
+
+    const pollingApi = useRequest(getOriginUrl, {
+        manual: true,
+        pollingInterval: 1000,
+        pollingWhenHidden: false,
+        pollingErrorRetryCount: 3,
+        onSuccess: (rst) => {
+            if (rst && rst.originalUrl) {
+                setOriginalUrl(rst.originalUrl)
+                pollingApi.cancel()
+            }
+        }
+    })
+
+    useEffect(() => {
+        if (data.generationsId) {
+            pollingApi.run(data.generationsId)
+        }
+        return () => {
+            pollingApi.cancel()
+        }
+    }, [data.generationsId])
+
+    return (
+        <a
+            href={data.originalUrl || originalUrl}
+            data-pswp-src={data.originalUrl}
+            data-pswp-width="1024"
+            data-pswp-height="1024"
+            className='relative group rounded-lg bg-[#0000001c] overflow-hidden'
+            key={data.createTime}
+
+        >
+            <div className='absolute w-full h-[40px] bottom-0 left-0 p-2 translate-y-[40px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+                <p className='text-sm w-full text-white font-light break-word leading-5 truncate'>
+                    {`Prompt: ${data.prompt}`}
+                </p>
+            </div>
+            <img className='w-full h-[200px] object-cover object-center ' src={data.thumbUrl} alt={data.prompt} />
+        </a>
+    )
+}
+
+export default function AiGcWindow() {
     const ctrRef = useRef<AbortController | null>(null)
     const [isCreating, setIsCreating] = useState(false)
-    const currentModel = useRecoilValue(currentChatModelState)
-    const [imageList, setImageList] = useState<IGImageItem[]>([])
+    const [imageList, setImageList] = useState<IImageItem[]>([])
+    const [model, setModel] = useState(CHAT_MODEL.DALL_E_3)
 
-    const onSend = async (inputPrompt: string) => {
-        setIsCreating(true)
-        const rst = await generateImage({ prompt: inputPrompt, model: currentModel })
-        if (rst) {
-            setImageList([...imageList, rst])
-        } else {
-            toast.error('生成失败')
+    const currentPage = useRef(1)
+    const totalPages = useRef(-1)
+
+    const imageListApi = useRequest(getImageList, {
+        onSuccess: (rst) => {
+            setImageList(rst.items)
+            currentPage.current = rst.page
+            totalPages.current = rst.totalPage
         }
-        setIsCreating(false)
+    })
+
+    const onSend = (inputPrompt: string) => {
+        setIsCreating(true)
+        generateImage({ prompt: inputPrompt, model }).then(rst => {
+            if (rst) {
+                setImageList((prev => ([rst, ...prev])))
+            } else {
+                toast.error('生成失败')
+            }
+        }).catch(() => {
+            toast.error('生成失败')
+        }).finally(() => {
+            setIsCreating(false)
+        })
     }
 
     const onStop = () => {
@@ -65,117 +181,58 @@ export default function AiGcWindow() {
                     el.setAttribute('target', '_blank');
                     el.setAttribute('rel', 'noopener');
                     pswp.on('change', () => {
-                        el.href = pswp.currSlide.data.src;
+                        // el.href = `${pswp.currSlide.data.src}?attname=${getPicName(pswp.currSlide.data.src)}`
+                        el.href = getDownLoadUrl(pswp.currSlide.data.src)
                     });
                 }
             });
         });
         lightbox.init();
-
         return () => {
             lightbox?.destroy();
             lightbox = null;
         };
     }, []);
 
+    console.log('imageList', imageList)
+
     return (
         <div className='flex h-full flex-col focus-visible:outline-0'>
-            <div className='w-full h-[56px] hidden md:block'>
-                {isDesktop && <PageHeader modeList={IMAGE_MODE_CONVERTER} />}
-            </div>
-            <div className='flex-shrink-0 mb-4 mt-4 md:mt-0'>
-                <GlobalInputForm
-                    isStreaming={isCreating}
-                    onSend={onSend}
-                    onStop={onStop}
-                    displayPrompts={false}
-                    hiddenFileUpload={true}
-                    hiddenGptTip={true}
-                    containerClass='md:max-w-3xl lg:max-w-[60rem] xl:max-w-[68rem]'
-                    placeHolder="巴洛克式绘画"
-                />
-            </div>
-            <div className='flex-1 overflow-y-auto pb-9'>
-                <div className='py-0 px-3 text-base m-auto md:py-2 md:px-5 lg:px-1 xl:px-5'>
-                    <div id='gallery-started' className="pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[60rem] xl:max-w-[68rem] m-auto">
-                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg'
-                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg"
-                            data-pswp-width="1024"
-                            data-pswp-height="1024"
-                            className='relative group overflow-hidden'
-                        >
-                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
-                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
-                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
-                                </p>
+            <div className='flex-1 overflow-hidden'>
+                <ScrollToBottom
+                    className={scrollBottomRoot}
+                    initialScrollBehavior='smooth'
+                >
+                    <div className='flex flex-col text-sm pb-9'>
+                        <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
+                        <div className='w-full py-0 px-3 text-base m-auto md:px-5 lg:px-1 xl:px-5'>
+                            <div id='gallery-started' className="w-full pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem] m-auto">
+                                <CreatingSkeleton isCreating={isCreating} />
+                                {
+                                    imageListApi.loading ? <LoadingSkeleton /> : <Fragment>
+                                        {imageList.map((item, index) => (
+                                            <MediaImage key={index} data={item} />
+                                        ))
+                                        }
+                                    </Fragment>
+                                }
                             </div>
-                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-200.jpg" alt="" />
-                        </a>
-                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/7/img-2500.jpg'
-                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/7/img-2500.jpg"
-                            data-pswp-width="1024"
-                            data-pswp-height="1024"
-                            className='relative group overflow-hidden'
-                        >
-                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
-                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
-                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
-                                </p>
+                        </div>
+                        {
+                            !imageListApi.loading && imageList.length === 0 && <div className='h-full text-center text-md text-black/50 font-light flex items-center justify-center flex-col flex-grow'>
+                                从详细的描述开始 尝试一个例子
                             </div>
-                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/7/img-200.jpg" alt="" />
-                        </a>
-                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg'
-                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg"
-                            data-pswp-width="1024"
-                            data-pswp-height="1024"
-                            className='relative group overflow-hidden'
-                        >
-                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
-                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
-                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
-                                </p>
-                            </div>
-                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-200.jpg" alt="" />
-                        </a>
-                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg'
-                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-2500.jpg"
-                            data-pswp-width="1024"
-                            data-pswp-height="1024"
-                            className='relative group overflow-hidden'
-                        >
-                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
-                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
-                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
-                                </p>
-                            </div>
-                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/3/img-200.jpg" alt="" />
-                        </a>
-                        <a href='https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg'
-                            data-pswp-src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-2500.jpg"
-                            data-pswp-width="1024"
-                            data-pswp-height="1024"
-                            className='relative group overflow-hidden'
-                        >
-                            <div className='absolute bottom-0 left-0 p-2 translate-y-[200px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
-                                <p className='text-sm w-full text-white font-light break-word leading-5 line-clamp-3'>
-                                    Prompt: 反射洞穴周围环境的音箱，H.R. Giger 绘画，特写
-                                </p>
-                            </div>
-                            <img className='w-full h-[200px] object-cover object-center rounded-lg' src="https://cdn.photoswipe.com/photoswipe-demo-images/photos/2/img-200.jpg" alt="" />
-                        </a>
-                        <a className='w-full h-[200px] object-cover object-center rounded-lg'>
-                            <Skeleton variant="rectangular" width="100%" height='100%' className='rounded-lg'
-                                sx={{
-                                    '&.MuiSkeleton-root>*': {
-                                        visibility: 'visible',
-                                    }
-                                }}>
-                                <div className='w-full h-[200px] flex items-center justify-center text-[18px] font-thin text-[#000]'>生成中...</div>
-                            </Skeleton>
-                        </a>
+                        }
                     </div>
-                </div>
+                </ScrollToBottom>
             </div>
+            <GlobalInputForm
+                onSend={onSend}
+                onStop={onStop}
+                displayPrompts={false}
+                placeHolder="巴洛克式绘画"
+                isStreaming={isCreating}
+            />
         </div>
     )
 }
