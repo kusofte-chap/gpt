@@ -194,8 +194,6 @@ export default function AiGcWindow() {
         };
     }, []);
 
-    console.log('imageList', imageList)
-
     return (
         <div className='flex h-full flex-col focus-visible:outline-0'>
             <div className='flex-1 overflow-hidden'>
@@ -204,7 +202,9 @@ export default function AiGcWindow() {
                     initialScrollBehavior='smooth'
                 >
                     <div className='flex flex-col text-sm pb-9'>
-                        <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
+                        <div className='hidden md:block'>
+                            <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
+                        </div>
                         <div className='w-full py-0 px-3 text-base m-auto md:px-5 lg:px-1 xl:px-5'>
                             <div id='gallery-started' className="w-full pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem] m-auto">
                                 <CreatingSkeleton isCreating={isCreating} />
