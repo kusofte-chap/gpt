@@ -57,7 +57,7 @@ export default function Footer() {
             />
             {openSetting && coord &&
                 <Portal>
-                    <div className="fixed top-0 left-0 z-20" style={{ top: coord.y, left: coord.x, width: coord.width }}>
+                    <div className="fixed top-0 left-0 z-[1210]" style={{ top: coord.y, left: coord.x, width: coord.width }}>
                         <SettingPanel
                             onSetting={() => {
                                 setOpenEditDialog(true)
