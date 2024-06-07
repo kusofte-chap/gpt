@@ -33,6 +33,8 @@ request.interceptors.response.use(
         if (error.response.data.status === 401) {
             handleLogout()
         }
+        console.log('data--11', error)
+        // if
         return Promise.reject(error)
     }
 )

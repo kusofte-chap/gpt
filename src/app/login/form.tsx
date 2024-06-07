@@ -10,6 +10,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { getCodeAndUid, login } from '@/api/auth';
 import encrypt from '@/until/encrypt';
 import { useRouter } from 'next/navigation'
+import toast from '@/until/message';
+import CachedIcon from '@mui/icons-material/Cached';
+import { AxiosError } from 'axios';
 
 interface IFormValues {
     username: string
@@ -51,20 +54,16 @@ export default function LoginForm() {
 
     const loginApi = useRequest(login, {
         manual: true,
-        onSuccess: (rst, params) => {
-            console.log('rst', rst)
-            if (rst.status === 400) {
-                setLoginError(rst.message)
-                return
+        onSuccess: (rst: any) => {
+            if (rst) {
+                rst.token && localStorage.setItem('gpt_token', rst.token.replace('Bearer ', '').trim())
+                setTimeout(() => {
+                    router.push('/')
+                }, 0)
             }
-            // debugger
-            rst.token && localStorage.setItem('gpt_token', rst.token.replace('Bearer ', '').trim())
-            setTimeout(() => {
-                router.push('/')
-            }, 0)
         },
-        onError: (error) => {
-            setLoginError(error.message || "登陆失败")
+        onError: (error: any) => {
+            setLoginError(error?.response?.data?.message || "登陆失败")
         }
     })
 
@@ -84,7 +83,7 @@ export default function LoginForm() {
 
     return (
         <ThemeProvider theme={customTheme}>
-            <form>
+            <form className='w-full md:max-w-[30rem] mx-auto'>
                 <div className='w-full mb-4'>
                     <Controller
                         name='username'
@@ -174,20 +173,33 @@ export default function LoginForm() {
                             )}
                         />
                     </div>
-                    <div className='flex-1'>
-                        {
-                            codeApi.loading ? <Skeleton
-                                variant="rounded"
-                                animation='wave'
-                                width='100%'
-                                height={52}
-                                sx={{ bgcolor: 'rgba(0,0,0,0.05' }}
+                    <div className='flex-1 flex items-center'>
+                        <div className='flex-grow flex items-center flex-col'>
+                            {
+                                codeApi.loading ? <Skeleton
+                                    variant="rounded"
+                                    animation='wave'
+                                    width='100%'
+                                    height={52}
+                                // sx={{ bgcolor: 'rgba(0,0,0,0.05' }}
 
-                            /> : <img
-                                className='block w-full h-[52px] user-drag-none select-none drag-none object-scale-down object-center outline-0 border-0 border-[transparent] text-opacity-0'
-                                src={codeApi.data?.img}
-                            />
-                        }
+                                /> : <img
+                                    className='block w-full h-[52px] user-drag-none select-none drag-none object-scale-down object-center outline-0 border-0 border-[transparent] text-opacity-0'
+                                    src={codeApi.data?.img}
+                                />
+                            }
+                        </div>
+                        <IconButton sx={{
+                            flexShrink: 0,
+                            width: "32",
+                            height: "32",
+                            color: '#10a37f'
+                        }}
+                            disabled={codeApi.loading}
+                            onClick={() => codeApi.run()}
+                        >
+                            <CachedIcon />
+                        </IconButton>
                     </div>
                 </div>
                 <div className='w-full mb-4'>

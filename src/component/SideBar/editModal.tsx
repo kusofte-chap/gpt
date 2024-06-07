@@ -3,10 +3,19 @@
 import { ReactNode, useState } from "react";
 import IconSetting from '@/assets/icons/icon-setting.svg'
 import IconLogoOut from '@/assets/icons/icon-logout.svg'
-import { Modal, Stack } from "@mui/material";
+import { FormHelperText, FormLabel, IconButton, InputAdornment, Modal, Stack, TextField } from "@mui/material";
 import IconClose from '@/assets/icons/icon-close.svg'
 import IconSafe from '@/assets/icons/icon-safe.svg'
 import cn from 'classnames'
+import { Controller, useForm } from "react-hook-form";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
+import { useRequest } from "ahooks";
+import { updatePassword } from "@/api/auth";
+import toast from "@/until/message";
+import encrypt from "@/until/encrypt";
+import { handleLogout } from "@/until/index";
+
 
 interface ITabPanelProps {
     children?: React.ReactNode;
@@ -61,10 +70,147 @@ function TabPanel(props: ITabPanelProps) {
             hidden={value !== index}
             id={`vertical-tabpanel-${index}`}
             aria-labelledby={`vertical-tab-${index}`}
-            className="flex flex-col gap-3 px-4 pb-1 text-sm text-token-text-primary sm:px-6 sm:pb-2 md:pl-0 md:pt-5"
+            className="flex flex-col gap-3 px-4 pb-1 text-sm text-token-text-primary  md:pt-5"
             {...other}
         >
             {children}
+        </div>
+    )
+}
+
+interface IFormFields {
+    oldPass: string
+    newPass: string
+}
+
+function EditPassWord() {
+    const { control, getValues, handleSubmit } = useForm<IFormFields>({
+        defaultValues: {
+            oldPass: '',
+            newPass: ''
+        }
+    })
+
+    const [errorMsg, setErrorMsg] = useState('')
+    const [showOldPass, setOldPass] = useState(false)
+    const [showNewPass, setShowOldPss] = useState(false)
+
+    const api = useRequest(updatePassword, {
+        manual: true,
+        onSuccess: (rst) => {
+            toast.success('修改成功，请重新登录')
+            handleLogout()
+        },
+        onError: (error: any) => {
+            setErrorMsg(error?.response?.data?.message || "登陆失败")
+        }
+    })
+
+    const handleOnSubmit = handleSubmit((data: IFormFields) => {
+        api.run({
+            oldPass: encrypt(data.oldPass),
+            newPass: encrypt(data.newPass)
+        })
+    })
+
+    return (
+        <div className="w-full flex flex-col flex-1">
+            <div className='w-full mb-5'>
+                <Controller
+                    name='oldPass'
+                    control={control}
+                    rules={{
+                        required: '請輸入8-20位英數字或符號',
+                        pattern: {
+                            value: /^[a-zA-Z0-9]{6,20}$/,
+                            message: '請輸入6-20位英數字或符號'
+                        }
+                    }}
+                    render={({ field, fieldState: { error, invalid } }) => (
+                        <TextField
+                            {...field}
+                            size="small"
+                            type={showOldPass ? 'text' : 'password'}
+                            fullWidth
+                            error={invalid}
+                            helperText={error?.message}
+                            placeholder='請輸入旧密碼'
+                            variant="outlined"
+                            autoComplete='off'
+                            onFocus={() => setErrorMsg('')}
+                            sx={{
+                                '.MuiFormHelperText-root': {
+                                    margin: 0
+                                }
+                            }}
+                            InputProps={{
+                                endAdornment:
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            size='small'
+                                            edge="end"
+                                            onClick={() => setOldPass(!showOldPass)}
+                                        >
+                                            {showOldPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
+                                        </IconButton>
+                                    </InputAdornment>
+                            }}
+                        />
+                    )}
+                />
+            </div>
+            <div className='w-full mb-5'>
+                <Controller
+                    name='newPass'
+                    control={control}
+                    rules={{
+                        required: '请输入新密码',
+                        validate: (value) => value !== getValues('oldPass') || '新密码与旧密码相同'
+                    }}
+                    render={({ field, fieldState: { error, invalid } }) => (
+                        <TextField
+                            {...field}
+                            type={showNewPass ? 'text' : 'password'}
+                            fullWidth
+                            size="small"
+                            error={invalid}
+                            helperText={error?.message}
+                            placeholder='请输入新密码'
+                            variant="outlined"
+                            autoComplete='off'
+                            onFocus={() => setErrorMsg('')}
+                            sx={{
+                                '.MuiFormHelperText-root': {
+                                    margin: 0
+                                }
+                            }}
+                            InputProps={{
+                                endAdornment:
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            size='small'
+                                            edge="end"
+                                            onClick={() => setShowOldPss(!showNewPass)}
+                                        >
+                                            {showNewPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
+                                        </IconButton>
+                                    </InputAdornment>
+                            }}
+                        />
+                    )}
+                />
+            </div>
+            <div className='w-full mb-1'>
+                <button
+                    disabled={api.loading}
+                    onClick={handleOnSubmit}
+                    className='w-full h-10 bg-[#10a37f] disabled:bg-[#10a37f]/[0.5] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-ok-btn'>
+                    确定
+                </button>
+            </div>
+            {
+                errorMsg && <FormHelperText error sx={{ fontSize: '14px' }}>{errorMsg}</FormHelperText>
+            }
         </div>
     )
 }
@@ -82,10 +228,10 @@ export function EditPersonInfoDialog({ open, onClose }: { open: boolean, onClose
                         </button>
                     </div>
                     <div className="flex-grow overflow-y-auto">
-                        <Stack direction='row' >
-                            <div className="m-2 md:m-0 md:px-4 md:pl-6 md:pt-4 flex flex-shrink-0 md:ml-[-8px] md:min-w-[180px] max-w-[200px] flex-col gap-2">
+                        <Stack direction='row'>
+                            <div className="m-2 md:m-0 md:px-4 md:pt-5 flex flex-shrink-0  md:min-w-[180px] max-w-[200px] border-r border-black/10 flex-col gap-2">
                                 <button
-                                    className={cn("group flex items-center justify-start gap-2 rounded-md px-2 py-1.5 text-sm text-token-text-primary", { 'bg-token-main-surface-tertiary': 0 === value })}
+                                    className={cn("group flex items-center justify-start gap-2 rounded-md px-2 py-2 text-sm text-token-text-primary", { 'bg-token-main-surface-tertiary': 0 === value })}
                                     onClick={() => setValue(0)}
                                 >
                                     <IconSafe />
@@ -101,7 +247,7 @@ export function EditPersonInfoDialog({ open, onClose }: { open: boolean, onClose
                             </div>
                             <div className="max-h-[calc(100vh-150px)] w-full overflow-y-auto md:min-h-[380px]">
                                 <TabPanel value={value} index={0}>
-                                    Item Three
+                                    <EditPassWord />
                                 </TabPanel>
                                 <TabPanel value={value} index={1}>
                                     Item Four

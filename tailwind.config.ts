@@ -23,7 +23,8 @@ const config: Config = {
       },
       boxShadow: {
         '3xl': 'inset 0 0 0 150px #0000001a',
-        '3xl-btr': '0 1px 0 rgba(0, 0, 0, 0.1)'
+        '3xl-btr': '0 1px 0 rgba(0, 0, 0, 0.1)',
+        'ok-btn':'inset 0 0 0 150px #0000001a'
       }
     },
   },
