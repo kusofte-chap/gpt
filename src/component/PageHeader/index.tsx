@@ -84,7 +84,7 @@ export function ModelSelect({
                         sx: {
                             p: 0,
                             width: { xs: 260, md: 300 },
-                            mt: 1.5,
+                            mt: '4px',
                             borderRadius: '8px',
                             border: '1px solid #e0e0e0',
                             overflow: 'visible',

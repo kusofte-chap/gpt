@@ -30,3 +30,14 @@ export const queryUserInfo = async ()=>{
 export const updatePassword =  (params:{oldPass:string,newPass:string})=>{
     return request.post(`/api/users/updatePass`,params) as any
 }
+
+
+export const uploadAvatar =  (file: File): Promise<{ url: string } | undefined> => {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return  request.post('/api/users/updateAvatar', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        },
+    })
+}

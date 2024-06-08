@@ -11,11 +11,13 @@ import { Controller, useForm } from "react-hook-form";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { useRequest } from "ahooks";
-import { updatePassword } from "@/api/auth";
+import { updatePassword, uploadAvatar } from "@/api/auth";
 import toast from "@/until/message";
 import encrypt from "@/until/encrypt";
 import { handleLogout } from "@/until/index";
-
+import { Avatar } from "@files-ui/react";
+import { useRecoilState } from "recoil";
+import { userInfoState } from "@/store/atom";
 
 interface ITabPanelProps {
     children?: React.ReactNode;
@@ -215,15 +217,108 @@ function EditPassWord() {
     )
 }
 
+
+
+function EditAvatar() {
+    const [userInfo, setUserInfo] = useRecoilState(userInfoState)
+    const [imageSource, setImageSource] = useState<string | File>(userInfo?.user?.avatarUrl || '');
+    const [errorMsg, setErrorMsg] = useState('');
+
+    console.log(userInfo, 'userInfo')
+
+    const avatarApi = useRequest(uploadAvatar, {
+        manual: true,
+        onSuccess: (rst: any) => {
+            console.log('rst', rst)
+            if (rst) {
+                setUserInfo((old => {
+                    if (old) {
+                        return {
+                            ...old,
+                            user: {
+                                ...old.user,
+                                avatarUrl: rst.avatarUrl
+                            }
+                        }
+                    }
+                    return {
+                        authorities: [],
+                        user: {
+                            id: '',
+                            username: '',
+                            avatarUrl: rst.avatarUrl
+                        }
+                    }
+                }))
+            }
+            toast.success('修改成功')
+        },
+        onError: (error: any) => {
+            setErrorMsg(error?.response?.data?.message || "登陆失败")
+        }
+    })
+
+    const isLimit2M = (file: File) => {
+        return file.size / 1024 / 1024 <= 2
+    }
+    const handleChangeSource = (selectedFile: any) => {
+        setErrorMsg('')
+        if (!isLimit2M(selectedFile)) {
+            setErrorMsg('文件大小超过2M')
+        }
+        setImageSource(selectedFile);
+    };
+
+    const handleOnConfirmUpdateAvatar = () => {
+        if (imageSource instanceof File) {
+            if (!isLimit2M(imageSource)) {
+                return
+            }
+            avatarApi.run(imageSource)
+        }
+    }
+
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center">
+            <Avatar
+                src={imageSource}
+                onChange={handleChangeSource}
+                variant="circle"
+                emptyLabel="请选择头像"
+                loadingLabel="上传中..."
+                changeLabel="点击头像修改"
+                smartImgFit='center'
+                isLoading={avatarApi.loading}
+                alt="头像"
+            />
+            <div className="text-sm text-token-text-secondary my-3 h-5">
+                <FormHelperText error sx={{ fontSize: '14px', m: 0 }}>{errorMsg}</FormHelperText>
+            </div>
+            <button
+                disabled={avatarApi.loading}
+                onClick={handleOnConfirmUpdateAvatar}
+                className="w-20 h-8 bg-[#10a37f] disabled:bg-[#10a37f]/[0.5] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-ok-btn">
+                {avatarApi.loading ? '上传中...' : '确定'}
+            </button>
+        </div>
+    )
+}
+
 export function EditPersonInfoDialog({ open, onClose }: { open: boolean, onClose: () => void }) {
     const [value, setValue] = useState(0);
+
+    const handleOnClose = () => {
+        onClose()
+        setValue(0)
+    }
+
     return (
         <Modal open={open}  >
             <div className="w-full h-full flex items-center justify-center">
                 <div className="flex flex-col w-[680px] rounded-lg bg-white h-auto min-h-[300px] overflow-hidden">
                     <div className="px-4 pb-4 pt-5 sm:p-6 flex items-center justify-between border-b border-black/10 ">
                         <span className="text-lg font-medium leading-6 text-token-text-primary">设置</span>
-                        <button className="w-6 h-6 text-token-text-tertiary hover:text-token-text-secondary" onClick={onClose}>
+                        <button className="w-6 h-6 text-token-text-tertiary hover:text-token-text-secondary" onClick={handleOnClose}>
                             <IconClose />
                         </button>
                     </div>
@@ -250,7 +345,7 @@ export function EditPersonInfoDialog({ open, onClose }: { open: boolean, onClose
                                     <EditPassWord />
                                 </TabPanel>
                                 <TabPanel value={value} index={1}>
-                                    Item Four
+                                    <EditAvatar />
                                 </TabPanel>
                             </div>
                         </Stack>

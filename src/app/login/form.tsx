@@ -83,7 +83,7 @@ export default function LoginForm() {
 
     return (
         <ThemeProvider theme={customTheme}>
-            <form className='w-full md:max-w-[30rem] mx-auto'>
+            <form className='w-full px-4 md:max-w-[30rem] md:mx-auto md:px-0'>
                 <div className='w-full mb-4'>
                     <Controller
                         name='username'

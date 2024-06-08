@@ -71,7 +71,6 @@ function getDownLoadUrl(url: string) {
 }
 
 function MediaImage({ data }: { data: IImageItem }) {
-    const [loading, setLoading] = useState(false)
     const [originalUrl, setOriginalUrl] = useState('')
 
     const pollingApi = useRequest(getOriginUrl, {
@@ -88,13 +87,13 @@ function MediaImage({ data }: { data: IImageItem }) {
     })
 
     useEffect(() => {
-        if (data.generationsId) {
+        if (data.generationsId && !data.originalUrl) {
             pollingApi.run(data.generationsId)
         }
         return () => {
             pollingApi.cancel()
         }
-    }, [data.generationsId])
+    }, [data.generationsId, data.originalUrl])
 
     return (
         <a
@@ -181,8 +180,7 @@ export default function AiGcWindow() {
                     el.setAttribute('target', '_blank');
                     el.setAttribute('rel', 'noopener');
                     pswp.on('change', () => {
-                        // el.href = `${pswp.currSlide.data.src}?attname=${getPicName(pswp.currSlide.data.src)}`
-                        el.href = getDownLoadUrl(pswp.currSlide.data.src)
+                        el.href = pswp.currSlide.data.src
                     });
                 }
             });
@@ -218,14 +216,15 @@ export default function AiGcWindow() {
                                 }
                             </div>
                         </div>
-                        {
-                            !imageListApi.loading && imageList.length === 0 && <div className='h-full text-center text-md text-black/50 font-light flex items-center justify-center flex-col flex-grow'>
-                                从详细的描述开始 尝试一个例子
-                            </div>
-                        }
+
                     </div>
                 </ScrollToBottom>
             </div>
+            {
+                !imageListApi.loading && imageList.length === 0 && <div className='w-full h-[200px] flex-shrink-0 text-center text-lg  text-black/50 font-light flex justify-center'>
+                    从详细的描述开始 尝试一个例子
+                </div>
+            }
             <GlobalInputForm
                 onSend={onSend}
                 onStop={onStop}

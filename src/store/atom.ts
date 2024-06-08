@@ -21,7 +21,6 @@ import { DefaultValue, atom } from 'recoil';
 export const userInfoState = atom({
     key: 'gpt-user-info-key',
     default: null as IUser | null,
-    // effects_UNSTABLE: [localStorageEffect('gpt-user-info-key')],
   });
   
 
