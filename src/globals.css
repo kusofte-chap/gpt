@@ -56,6 +56,13 @@ textarea:focus {
   width: 1rem
 }
 
+.icon-xs {
+  stroke-width: 1.5;
+  flex-shrink: 0;
+  height: .75rem;
+  width: .75rem;
+}
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
@@ -315,4 +322,41 @@ code.hljs, code[class*=language-], pre[class*=language-] {
       margin-left: .25rem;
       vertical-align: baseline
   }
+}
+
+.btn {
+  align-items: center;
+  border-color: transparent;
+  border-radius: .5rem;
+  border-width: 1px;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: .875rem;
+  font-weight: 500;
+  justify-content: center;
+  line-height: 1.25rem;
+  min-height: 38px;
+  padding: .5rem .75rem;
+  pointer-events: auto
+}
+
+.btn-secondary {
+  border-color: rgba(0,0,0,.15);
+  border-width: 1px;
+  color: #0d0d0d;
+}
+
+.gizmo-shadow-stroke {
+  position: relative;
+}
+
+.gizmo-shadow-stroke::after {
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
+    border-radius: 9999px;
+    bottom: 0;
+    content: "";
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
 }

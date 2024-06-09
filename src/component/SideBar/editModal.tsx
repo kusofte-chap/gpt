@@ -229,7 +229,6 @@ function EditAvatar() {
     const avatarApi = useRequest(uploadAvatar, {
         manual: true,
         onSuccess: (rst: any) => {
-            console.log('rst', rst)
             if (rst) {
                 setUserInfo((old => {
                     if (old) {
