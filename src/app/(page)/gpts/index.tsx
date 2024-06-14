@@ -10,6 +10,7 @@ import { useRequest } from 'ahooks'
 import { asyncGetGPTList, asyncGetGPTListMore } from '@/api/gpts'
 import { IGptInfo, IGroupGptItem, IGroupListItem, IItemList } from '@/interface/gpts'
 import Spinning from '@/component/Spinning'
+import RoleModal from './ roleModal'
 
 
 function NoDataTemplate({ title = "暂无数据" }: { title?: string }) {
@@ -53,7 +54,11 @@ function RecommendGroup() {
     )
 }
 
-function GptModelGroup({ info, data }: { info: IGptInfo, data: IItemList }) {
+function GptModelGroup({ info, data, onClickRole }: {
+    info: IGptInfo,
+    data: IItemList,
+    onClickRole: (data: IGroupListItem) => void
+}) {
     const [newList, setNewList] = useState<IGroupListItem[]>([])
     const [currentPage, setCurrentPage] = useState(0)
     const [totalPages, setTotalPages] = useState(0)
@@ -86,7 +91,7 @@ function GptModelGroup({ info, data }: { info: IGptInfo, data: IItemList }) {
                     list.length === 0 ? <NoDataTemplate /> : <div className='grid grid-cols-1 gap-x-1.5 gap-y-1 md:gap-x-2 md:gap-y-1.5 lg:grid-cols-2 lg:gap-x-3 lg:gap-y-2.5'>
                         {
                             list?.map((item, index) => (
-                                <a key={item.id} type='button' className='gizmo-link cursor-pointer group flex h-[104px] items-center gap-2.5 overflow-hidden rounded-xl px-1 py-4 hover:bg-token-main-surface-secondary md:px-3 md:py-4 lg:px-3'>
+                                <a key={item.id} type='button' onClick={() => onClickRole(item)} className='gizmo-link cursor-pointer group flex h-[104px] items-center gap-2.5 overflow-hidden rounded-xl px-1 py-4 hover:bg-token-main-surface-secondary md:px-3 md:py-4 lg:px-3'>
                                     <div className='text-md flex w-8 shrink-0 items-center justify-center font-semibold'>{index + 1}</div>
                                     <div className='flex w-full flex-grow items-center gap-4 overflow-hidden'>
                                         <div className='h-12 w-12 flex-shrink-0'>
@@ -131,6 +136,13 @@ function GptModelGroup({ info, data }: { info: IGptInfo, data: IItemList }) {
 
 export default function GPTs() {
     const { data: groupList, loading } = useRequest<IGroupGptItem[], any>(asyncGetGPTList)
+    const [selectedRoleModel, setSelectedRoleModel] = useState<IGroupListItem>()
+    const [openRoleModal, setOpenRoleModal] = useState(false)
+
+    const handleOnSelectItem = (data: IGroupListItem) => {
+        setOpenRoleModal(true)
+        setSelectedRoleModel(data)
+    }
 
     const tabList = useMemo(() => {
         if (loading) {
@@ -141,6 +153,8 @@ export default function GPTs() {
             code: info.code
         }))
     }, [groupList, loading])
+
+
 
     return (
         <div className='h-full overflow-y-auto' id='gpts-content'>
@@ -195,10 +209,12 @@ export default function GPTs() {
                             key={item.info.code}
                             info={item.info}
                             data={item.list}
+                            onClickRole={handleOnSelectItem}
                         />
                     ))
                 }
             </div>
+            <RoleModal data={selectedRoleModel} open={openRoleModal} onClose={() => setOpenRoleModal(false)} />
         </div>
     )
 }

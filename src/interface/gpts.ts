@@ -12,6 +12,7 @@ export interface IGroupListItem {
     profile_picture_name: string
     prompt_starters: string[]
     tools: string[]
+    name: string
     updateTime: string
 }
 
