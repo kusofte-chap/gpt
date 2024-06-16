@@ -360,3 +360,38 @@ code.hljs, code[class*=language-], pre[class*=language-] {
     right: 0;
     top: 0;
 }
+
+.scroll-bottom-anchor {
+  right: 0;
+  bottom: 20px!important;
+  left: 50%;
+  width: 26px !important;
+  height: 26px!important;
+  padding: 2px!important;
+  border-radius: 100px !important;
+  transform: translateX(-50%);
+  background: #fff url('/icon-scroll-down.png') no-repeat center/68%!important;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.1);
+}
+
+
+.chat-item-enter {
+  opacity: 0;
+  height: 0;
+}
+.chat-item-enter-active {
+  opacity: 1;
+  height: 36px;
+  transition: all 0.25s ease-in;
+}
+
+.chat-item-exit {
+  opacity: 1;
+  height: 36px;
+}
+
+.chat-item-exit-active {
+  opacity: 0;
+  height: 0;
+  transition: all 0.25s ease-in;
+}

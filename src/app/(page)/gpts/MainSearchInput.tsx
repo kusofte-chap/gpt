@@ -1,9 +1,8 @@
 'use client'
 
-import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
+import React, { ChangeEvent, useRef, useState } from 'react'
 import IconSearch from '@/assets/icons/icon-search.svg'
 import IconChat from '@/assets/icons/icon-chat.svg'
-import { useSpring, animated } from '@react-spring/web'
 import { useRequest } from 'ahooks'
 import { asyncSearch } from '@/api/gpts'
 import Spinning from '@/component/Spinning'
@@ -13,12 +12,19 @@ interface IPopoverPanelProps {
     isSearching: boolean
     isSearchEmpty: boolean
     data: IGroupListItem[]
+    open: boolean
+    onOpenRoleModal: (data: IGroupListItem) => void
 }
 
-export function PopoverPanel({ isSearching, isSearchEmpty, data }: IPopoverPanelProps) {
-
+export function PopoverPanel({
+    isSearching,
+    isSearchEmpty,
+    data,
+    open,
+    onOpenRoleModal
+}: IPopoverPanelProps) {
     return (
-        <div className='absolute top-[calc(100%-10px)] w-full max-h-[530px] overflow-y-auto rounded-lg rounded-t-none border border-t-0 border-token-border-light bg-token-main-surface-primary px-3 py-2 opacity-100 translate-y-0'>
+        <div data-state={open ? 'open' : 'close'} className='data-[state=open]:block data-[state=close]:hidden data-[state=open]: absolute top-[calc(100%-10px)] w-full max-h-[530px] overflow-y-auto rounded-lg rounded-t-none border border-t-0 border-token-border-light bg-token-main-surface-primary px-3 py-2 opacity-100 translate-y-0'>
             <div className='flex flex-col'>
                 <div className='px-3 pb-2 text-xs text-token-text-tertiary font-semibold '>
                     {isSearching ? <div className='flex justify-center'><Spinning /></div> : isSearchEmpty ? "没有符合的搜索结果" : "全部"}
@@ -26,7 +32,10 @@ export function PopoverPanel({ isSearching, isSearchEmpty, data }: IPopoverPanel
                 {
                     data?.map((item) => {
                         return (
-                            <a type='button' className='gizmo-link cursor-pointer group mx-2 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/10'>
+                            <a
+                                onClick={() => onOpenRoleModal(item)}
+                                type='button'
+                                className='gizmo-link cursor-pointer group mx-2 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/10'>
                                 <div className='h-8 w-8 shrink-0'>
                                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
                                         <img src={item.profile_picture_name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
@@ -41,7 +50,7 @@ export function PopoverPanel({ isSearching, isSearchEmpty, data }: IPopoverPanel
                                         <div className="-mt-1">
                                             <div className="mt-1 flex flex-row items-center space-x-1">
                                                 <div className="truncate text-xs text-token-text-tertiary">
-                                                    {` 创建者：${item.author?.name}`}
+                                                    {`创建者：${item.author?.name}`}
                                                 </div>
                                             </div>
                                         </div>
@@ -60,7 +69,7 @@ export function PopoverPanel({ isSearching, isSearchEmpty, data }: IPopoverPanel
     )
 }
 
-export default function MainSearchInput() {
+export default function MainSearchInput({ onOpenRoleModal }: { onOpenRoleModal: (data: IGroupListItem) => void }) {
     const [openPopoverPanel, setOpenPopoverPanel] = useState(false)
     const inputRef = useRef<HTMLInputElement | null>(null)
     const [searchRstList, setSearchRstList] = useState<IGroupListItem[]>([])
@@ -91,6 +100,13 @@ export default function MainSearchInput() {
         searchApi.run('')
     }
 
+
+    const handleOnOpenRoleModal = (data: IGroupListItem) => {
+        setOpenPopoverPanel(false)
+        onOpenRoleModal(data)
+        inputRef.current!.value = ''
+    }
+
     return (
         <div className="group relative rounded-xl z-20 mb-6 mt-2 flex-grow shadow-[0px_10px_10px_-6px_rgba(0,0,0,0.04)]" id='main-search'>
             <div className='absolute w-[18px] left-4 h-full flex items-center justify-center'>
@@ -100,16 +116,15 @@ export default function MainSearchInput() {
                 ref={inputRef}
                 placeholder='搜索 GPT'
                 onFocus={handleOnFocus}
-                onBlur={handleOnBlur}
                 onChange={handleSearch}
             />
-            {
-                openPopoverPanel && <PopoverPanel
-                    isSearching={searchApi.loading}
-                    data={searchRstList}
-                    isSearchEmpty={isSearchEmpty}
-                />
-            }
+            <PopoverPanel
+                open={openPopoverPanel}
+                isSearching={searchApi.loading}
+                data={searchRstList}
+                isSearchEmpty={isSearchEmpty}
+                onOpenRoleModal={handleOnOpenRoleModal}
+            />
         </div>
     )
 }

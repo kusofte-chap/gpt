@@ -9,7 +9,7 @@ import { useRequest } from 'ahooks'
 import { asyncSearch } from '@/api/gpts'
 import { IGroupListItem } from '@/interface/gpts'
 
-export default function SearchInput() {
+export default function SearchInput({ onOpenRoleModal }: { onOpenRoleModal: (data: IGroupListItem) => void }) {
     const [showMediumInput, setShowMediumInput] = useState(false)
     const [openPopoverPanel, setOpenPopoverPanel] = useState(false)
     const [searchRstList, setSearchRstList] = useState<IGroupListItem[]>([])
@@ -28,11 +28,6 @@ export default function SearchInput() {
     const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value.trim().slice(0, 20)
         searchApi.run(value)
-    }
-
-    const handleOnBlur = () => {
-        setOpenPopoverPanel(false)
-        inputRef.current!.value = ''
     }
 
     const handleOnFocus = () => {
@@ -55,6 +50,12 @@ export default function SearchInput() {
 
     }, [])
 
+    const handleOnOpenRoleModal = (data: IGroupListItem) => {
+        setOpenPopoverPanel(false)
+        onOpenRoleModal(data)
+        inputRef.current!.value = ''
+    }
+
     const inputClassName = useMemo(() => {
         return classNames('z-10 w-full rounded-xl border border-token-border-light bg-token-main-surface-primary py-2 pr-3 font-normal outline-0 delay-100 h-10 text-sm pl-9', {
             'hidden': !showMediumInput
@@ -71,16 +72,15 @@ export default function SearchInput() {
                 ref={inputRef}
                 placeholder='搜索 GPT'
                 onFocus={handleOnFocus}
-                onBlur={handleOnBlur}
                 onChange={handleSearch}
             />
-            {
-                openPopoverPanel && <PopoverPanel
-                    isSearching={searchApi.loading}
-                    data={searchRstList}
-                    isSearchEmpty={isSearchEmpty}
-                />
-            }
+            <PopoverPanel
+                open={openPopoverPanel}
+                isSearching={searchApi.loading}
+                data={searchRstList}
+                isSearchEmpty={isSearchEmpty}
+                onOpenRoleModal={handleOnOpenRoleModal}
+            />
         </div>
     )
 }

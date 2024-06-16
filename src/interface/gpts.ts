@@ -11,7 +11,7 @@ export interface IGroupListItem {
     model: CHAT_MODEL
     profile_picture_name: string
     prompt_starters: string[]
-    tools: string[]
+    tools: {type:TOOLS_ENUM}[]
     name: string
     updateTime: string
 }
@@ -32,4 +32,12 @@ export interface IGptInfo {
 export interface IGroupGptItem {
     info: IGptInfo
     list:IItemList
+}
+
+export enum TOOLS_ENUM {
+    CODE_INTERPRETER = 'code_interpreter'
+}
+
+export const TOOLS_TO_CONVERTS = {
+    [TOOLS_ENUM.CODE_INTERPRETER]: '代码解译器'
 }

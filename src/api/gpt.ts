@@ -13,7 +13,7 @@ export const getDefaultPrompts = async ()=>{
 // 获取历史对话
 export const getHistoryList = async (page:number)=>{
     try {
-        return await request.get(`/api/conversations`,{params:{page,size:28}}) as any
+        return await request.get(`/api/conversations`,{params:{page,size:50}}) as any
     } catch (error) {
         console.error(`getHistoryList error: ${error}`)
         return new Error(error as any)

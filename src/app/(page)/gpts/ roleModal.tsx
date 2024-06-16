@@ -5,7 +5,7 @@ import IconChat from '@/assets/icons/icon-start-chat.svg'
 import IconChecked from '@/assets/icons/icon-checked.svg'
 import IconStar from '@/assets/icons/icon-star.svg'
 import Link from 'next/link'
-import { IGroupListItem } from '@/interface/gpts'
+import { IGroupListItem, TOOLS_TO_CONVERTS } from '@/interface/gpts'
 import { faker } from '@faker-js/faker'
 
 interface IRoleModalProps {
@@ -15,11 +15,10 @@ interface IRoleModalProps {
 }
 
 export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
-
     return (
         <Modal open={open}>
             <div className='w-full h-full flex flex-col items-center justify-center'>
-                <div className='flex w-full h-[calc(100vh-30rem)] min-h-[85vh] md:min-h-[70vh] max-w-[95vw] md:max-w-xl flex-col shadow-xl rounded-lg bg-white'>
+                <div className='flex w-full h-[calc(100vh-30rem)] min-h-[60vh] md:min-h-[70vh] max-w-[95vw] md:max-w-xl flex-col shadow-xl rounded-lg bg-white'>
                     <div className='flex-grow overflow-y-auto'>
                         <div className='relative flex h-full flex-col gap-2 overflow-hidden px-2 py-4'>
                             <div className='flex flex-grow flex-col gap-4 overflow-y-auto px-6 pb-20 pt-16'>
@@ -33,7 +32,7 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                                 <div className='absolute left-0 bottom-4 w-full'>
                                     <div className='flex min-h-[64px] items-end bg-gradient-to-t from-token-main-surface-primary to-transparent px-2'>
                                         <div className='flex flex-grow flex-col items-center'>
-                                            <Link href='/gpts' target='_self' className='btn relative h-12 w-full bg-[#0d0d0d] text-white'>
+                                            <Link href={`/gpts/${data?.id}`} target='_self' className='btn relative h-12 w-full bg-[#0d0d0d] text-white'>
                                                 <div className='flex w-full items-center justify-center gap-1.5'>
                                                     <IconChat />
                                                     开始聊天
@@ -99,21 +98,19 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                                         }
                                     </div>
                                 </div>
-                                <div className='w-full flex flex-col'>
+                                {data && data.tools.length > 0 && <div className='w-full flex flex-col'>
                                     <div className='font-bold mt-6 mb-2'>功能</div>
-                                    <div className='flex flex-row items-start gap-2 py-1 text-sm'>
-                                        <IconChecked />
-                                        <div>自定义角色</div>
-                                    </div>
-                                    <div className='flex flex-row items-start gap-2 py-1 text-sm'>
-                                        <IconChecked />
-                                        <div>自定义角色</div>
-                                    </div>
-                                    <div className='flex flex-row items-start gap-2 py-1 text-sm'>
-                                        <IconChecked />
-                                        <div>自定义角色</div>
-                                    </div>
-                                </div>
+                                    {
+                                        data?.tools.map((item, index) => {
+                                            return (
+                                                <div className='flex flex-row items-start gap-2 py-1 text-sm' key={index}>
+                                                    <IconChecked />
+                                                    <div>{TOOLS_TO_CONVERTS[item.type]}</div>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>}
                             </div>
                         </div>
                     </div>

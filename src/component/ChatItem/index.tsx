@@ -9,7 +9,26 @@ import IconRestart from '@/assets/icons/icon-restart.svg'
 import IconModel from '@/assets/icons/icon-model.svg'
 import mdParser from '@/until/mdit'
 
-export function SelfChatItem({ id, index, content, chatId }: { id: string, index: number, content: string, chatId?: string }) {
+interface ISelfChatItemProps {
+    id: string
+    index: number
+    content: string
+    avatar?: string
+    userName?: string
+    chatId?: string
+}
+
+interface IGptChatItemProps {
+    index: number
+    name?: string
+    msgId?: string
+    chatId?: string
+    md?: string
+    avatar?: string
+    selfRender?: boolean
+}
+
+export function SelfChatItem({ id, index, content, chatId, avatar, userName }: ISelfChatItemProps) {
     return (
         <div className='w-full text-token-text-primary' data-user-index={index} data-chat-id={chatId}>
             <div className='py-2 px-3 text-base m-auto md:px-5 lg:px-1 xl:px-5'>
@@ -19,7 +38,7 @@ export function SelfChatItem({ id, index, content, chatId }: { id: string, index
                             <div className='pt-0.5'>
                                 <div className='flex h-6 w-6 items-center justify-center overflow-hidden rounded-full'>
                                     <div className='relative flex'>
-                                        <img src='https://i2.wp.com/cdn.auth0.com/avatars/ru.png?ssl=1' width='24' height='24' className='text-opacity-0' />
+                                        {avatar ? <img src={avatar} width='24' height='24' className='text-opacity-0' /> : userName?.charAt(0)?.toUpperCase()}
                                     </div>
                                 </div>
                             </div>
@@ -29,7 +48,7 @@ export function SelfChatItem({ id, index, content, chatId }: { id: string, index
                         <div className='font-semibold select-none'>您</div>
                         <div className='flex-col gap-1 md:gap-3'>
                             <div className='flex flex-grow flex-col max-w-full' data-message-id={id} data-role='user'>
-                                <div className='min-h-[20px] text-message flex flex-col items-start whitespace-pre-wrap break-words [.text-message+&]:mt-5 juice:w-full overflow-x-auto gap-3'>
+                                <div className='min-h-[20px] text-message flex flex-col items-start whitespace-pre-wrap break-words [.text-message+&]:mt-5 overflow-x-auto gap-3'>
                                     <div className='relative max-w-[70%]'>
                                         {content}
                                     </div>
@@ -43,16 +62,8 @@ export function SelfChatItem({ id, index, content, chatId }: { id: string, index
     )
 }
 
-
-interface IGptChatItemProps {
-    index: number
-    msgId?: string
-    chatId?: string
-    md?: string
-    selfRender?: boolean
-}
-
-export function GptChatItem({ index, selfRender = false, msgId = '', md, chatId }: IGptChatItemProps) {
+export function GptChatItem(props: IGptChatItemProps) {
+    const { index, md, chatId, avatar, name = 'ChatGPT', selfRender = false, msgId = '' } = props
     const isRender = useRef(false)
 
     useEffect(() => {
@@ -73,14 +84,14 @@ export function GptChatItem({ index, selfRender = false, msgId = '', md, chatId 
                             <div className='pt-0.5'>
                                 <div className='flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border'>
                                     <div className='relative flex items-center justify-center'>
-                                        <GptAvatar />
+                                        {avatar ? <img src={avatar} width='24' height='24' className='text-opacity-0' /> : <GptAvatar />}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className='relative flex w-full min-w-0 flex-col'>
-                        <div className='font-semibold select-none'>ChatGPT</div>
+                        <div className='font-semibold select-none'>{name}</div>
                         <div className='flex-col gap-1 md:gap-3 group'>
                             <div className='flex flex-grow flex-col max-w-full'>
                                 <div className='min-h-[20px] flex flex-col items-start break-words overflow-x-auto gap-3' data-role='assistant' >

@@ -11,6 +11,7 @@ import { asyncGetGPTList, asyncGetGPTListMore } from '@/api/gpts'
 import { IGptInfo, IGroupGptItem, IGroupListItem, IItemList } from '@/interface/gpts'
 import Spinning from '@/component/Spinning'
 import RoleModal from './ roleModal'
+import { useMediaQuery } from '@mui/material'
 
 
 function NoDataTemplate({ title = "暂无数据" }: { title?: string }) {
@@ -19,42 +20,43 @@ function NoDataTemplate({ title = "暂无数据" }: { title?: string }) {
     )
 }
 
-function RecommendGroup() {
-    return (
-        <div className='h-fit scroll-mt-28 last:min-h-[calc(100vh-8rem)]'>
-            <div className='text-xl font-semibold md:text-2xl'>精选</div>
-            <div className='text-sm text-token-text-tertiary md:text-base'>本周的精选推荐</div>
-            <div className='mb-10 mt-4'>
-                <div className='grid grid-cols-1 gap-x-1.5 gap-y-1 md:gap-x-2 md:gap-y-1.5 lg:grid-cols-2 lg:gap-x-3 lg:gap-y-2.5'>
-                    {
-                        [1, 3, 4, 5].map(item => (
-                            <a type='button' className='cursor-pointer group flex h-24 items-center gap-5 overflow-hidden rounded-xl bg-gray-50 px-7 py-8 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-white/10 md:h-32 lg:h-36'>
-                                <div className='h-16 w-16 flex-shrink-0 md:h-24 md:w-24'>
-                                    <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                                        <img src='/gpts-de-2.png' className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
-                                    </div>
-                                </div>
-                                <div className='flex flex-col'>
-                                    <div className='line-clamp-2 font-semibold md:text-lg'>
-                                        SQL Expert
-                                    </div>
-                                    <span className='line-clamp-2 text-xs md:line-clamp-3'>SQL expert for optimization and queries.</span>
-                                    <div className='mt-1 line-clamp-1 flex justify-start gap-1 text-xs text-token-text-tertiary'>
-                                        <div className='mt-1 flex flex-row items-center space-x-1'>
-                                            <div className='text-token-text-tertiary text-xs'>创建者：Dmitry Khanukov</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        ))
-                    }
-                </div>
-            </div>
-        </div>
-    )
-}
+// function RecommendGroup() {
+//     return (
+//         <div className='h-fit scroll-mt-28 last:min-h-[calc(100vh-8rem)]'>
+//             <div className='text-xl font-semibold md:text-2xl'>精选</div>
+//             <div className='text-sm text-token-text-tertiary md:text-base'>本周的精选推荐</div>
+//             <div className='mb-10 mt-4'>
+//                 <div className='grid grid-cols-1 gap-x-1.5 gap-y-1 md:gap-x-2 md:gap-y-1.5 lg:grid-cols-2 lg:gap-x-3 lg:gap-y-2.5'>
+//                     {
+//                         [1, 3, 4, 5].map(item => (
+//                             <a type='button' className='cursor-pointer group flex h-24 items-center gap-5 overflow-hidden rounded-xl bg-gray-50 px-7 py-8 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-white/10 md:h-32 lg:h-36'>
+//                                 <div className='h-16 w-16 flex-shrink-0 md:h-24 md:w-24'>
+//                                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
+//                                         <img src='/gpts-de-2.png' className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
+//                                     </div>
+//                                 </div>
+//                                 <div className='flex flex-col'>
+//                                     <div className='line-clamp-2 font-semibold md:text-lg'>
+//                                         SQL Expert
+//                                     </div>
+//                                     <span className='line-clamp-2 text-xs md:line-clamp-3'>SQL expert for optimization and queries.</span>
+//                                     <div className='mt-1 line-clamp-1 flex justify-start gap-1 text-xs text-token-text-tertiary'>
+//                                         <div className='mt-1 flex flex-row items-center space-x-1'>
+//                                             <div className='text-token-text-tertiary text-xs'>创建者：Dmitry Khanukov</div>
+//                                         </div>
+//                                     </div>
+//                                 </div>
+//                             </a>
+//                         ))
+//                     }
+//                 </div>
+//             </div>
+//         </div>
+//     )
+// }
 
-function GptModelGroup({ info, data, onClickRole }: {
+function GptModelGroup({ id, info, data, onClickRole }: {
+    id: string
     info: IGptInfo,
     data: IItemList,
     onClickRole: (data: IGroupListItem) => void
@@ -84,7 +86,7 @@ function GptModelGroup({ info, data, onClickRole }: {
 
     return (
         <div className='h-fit scroll-mt-28 last:min-h-[calc(100vh-8rem)]'>
-            <div className='text-xl font-semibold md:text-2xl'>{info?.title}</div>
+            <div className='text-xl font-semibold md:text-2xl' id={id}>{info?.title}</div>
             <div className='text-sm text-token-text-tertiary md:text-base'>{info?.description}</div>
             <div className='mb-10 mt-4'>
                 {
@@ -138,10 +140,21 @@ export default function GPTs() {
     const { data: groupList, loading } = useRequest<IGroupGptItem[], any>(asyncGetGPTList)
     const [selectedRoleModel, setSelectedRoleModel] = useState<IGroupListItem>()
     const [openRoleModal, setOpenRoleModal] = useState(false)
+    const [tabIndex, setTabIndex] = useState(0)
+    const isMobile = useMediaQuery('(max-width: 768px)')
 
     const handleOnSelectItem = (data: IGroupListItem) => {
         setOpenRoleModal(true)
         setSelectedRoleModel(data)
+    }
+
+    const handleClickTab = (targetBlock: string, index: number) => {
+        const parent = document.getElementById('gpts-content');
+        const targetElement = document.getElementById(targetBlock);
+        const tabHeight = document.querySelector('#tabs')!.clientHeight;
+        const targetPosition = targetElement!.getBoundingClientRect().top + parent!.scrollTop - tabHeight - (isMobile ? 120 : 80);
+        parent!.scrollTo({ top: targetPosition, behavior: 'smooth' });
+        setTabIndex(index)
     }
 
     const tabList = useMemo(() => {
@@ -154,8 +167,15 @@ export default function GPTs() {
         }))
     }, [groupList, loading])
 
+    if (loading) {
+        return (
+            <div className='w-full h-full flex items-center justify-center'>
+                <Spinning />
+            </div>
+        )
+    }
 
-
+    console.log(tabList)
     return (
         <div className='h-full overflow-y-auto' id='gpts-content'>
             <div className='sticky top-0  mb-1.5 items-center h-14 p-2 font-semibold bg-token-main-surface-primary z-30 mx-auto flex w-full justify-between gap-2 whitespace-nowrap pt-[1.125rem]'>
@@ -166,7 +186,7 @@ export default function GPTs() {
                         </div>
                     </button>
                 </div>
-                <SearchInput />
+                <SearchInput onOpenRoleModal={handleOnSelectItem} />
                 <div className='w-[calc(100% - 768px)/2] flex items-center justify-end'>
                     <button className='btn relative btn-ghost bg-[#10a37f] opacity-50'>
                         <div className='flex w-full items-center justify-center gap-1.5 text-white'>
@@ -185,17 +205,22 @@ export default function GPTs() {
                         探索并创建结合了指令、额外知识和任何技能组合的自定义版本的 ChatGPT。
                     </div>
                 </div>
-                <MainSearchInput />
-                <div className='sticky top-14 z-10 -ml-4 mb-12 w-screen bg-token-main-surface-primary py-2 text-sm md:ml-0 md:w-full md:pb-0'>
+                <MainSearchInput onOpenRoleModal={handleOnSelectItem} />
+                <div className='sticky top-14 z-10 -ml-4 mb-12 w-screen bg-token-main-surface-primary py-2 text-sm md:ml-0 md:w-full md:pb-0' id='tabs'>
                     <div className='no-scrollbar flex scroll-m-5 gap-1.5 overflow-x-auto md:overflow-hidden'>
                         {
                             tabList?.map(({ title, code }, index) => {
                                 const className = cn('cursor-pointer scroll-mx-5 whitespace-nowrap rounded-3xl px-3 py-2 first:ml-4 last:mr-4 md:px-2 md:first:ml-0 md:last:mr-0 text-token-main-surface-primary md:rounded-none md:text-token-text-primary', {
-                                    'border-token-text-primary bg-black text-token-main-surface-primary md:rounded-none md:border-b-2 md:bg-transparent md:text-token-text-primary md:border-b-2 md:bg-transparent': index === 0,
-                                    'bg-token-main-surface-secondary hover:bg-gray-100 hover:text-token-text-primary md:rounded-lg md:bg-transparent text-token-text-primary  md:text-token-text-tertiary md:hover:bg-gray-50': index !== 0
+                                    'border-token-text-primary bg-black text-token-main-surface-primary md:rounded-none md:border-b-2 md:bg-transparent md:text-token-text-primary md:border-b-2 md:bg-transparent': tabIndex === index,
+                                    'bg-token-main-surface-secondary hover:bg-gray-100 hover:text-token-text-primary md:rounded-lg md:bg-transparent text-token-text-primary  md:text-token-text-tertiary md:hover:bg-gray-50': index !== tabIndex
                                 })
                                 return (
-                                    <div className={className} key={code}>
+                                    <div
+                                        className={className}
+                                        key={code}
+                                        onClick={() => {
+                                            handleClickTab(code, index)
+                                        }}>
                                         {title}
                                     </div>
                                 )
@@ -206,6 +231,7 @@ export default function GPTs() {
                 {
                     groupList?.map(item => (
                         <GptModelGroup
+                            id={item.info.code}
                             key={item.info.code}
                             info={item.info}
                             data={item.list}
@@ -214,7 +240,11 @@ export default function GPTs() {
                     ))
                 }
             </div>
-            <RoleModal data={selectedRoleModel} open={openRoleModal} onClose={() => setOpenRoleModal(false)} />
+            <RoleModal
+                data={selectedRoleModel}
+                open={openRoleModal}
+                onClose={() => setOpenRoleModal(false)}
+            />
         </div>
     )
 }

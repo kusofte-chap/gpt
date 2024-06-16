@@ -6,7 +6,8 @@ export interface IHistoryItem {
     model: string,
     title: string,
     updateTime: string
-    dateKey:string
+    dateKey: string
+    nodeRef: React.RefObject<HTMLLIElement>
 }
 
 export interface IHistoryGroup{
