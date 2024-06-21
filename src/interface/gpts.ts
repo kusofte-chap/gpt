@@ -9,7 +9,7 @@ export interface IGroupListItem {
     categories: string[]
     description: string
     model: CHAT_MODEL
-    profile_picture_name: string
+    profile_picture_path: string
     prompt_starters: string[]
     tools: {type:TOOLS_ENUM}[]
     name: string

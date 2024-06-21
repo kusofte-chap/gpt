@@ -97,8 +97,8 @@ function GptModelGroup({ id, info, data, onClickRole }: {
                                     <div className='text-md flex w-8 shrink-0 items-center justify-center font-semibold'>{index + 1}</div>
                                     <div className='flex w-full flex-grow items-center gap-4 overflow-hidden'>
                                         <div className='h-12 w-12 flex-shrink-0'>
-                                            <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                                                <img src={item.profile_picture_name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
+                                            <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full'>
+                                                <img src={item.profile_picture_path} className='h-full w-full bg-token-main-surface-secondary object-contain' width={80} height={80} />
                                             </div>
                                         </div>
                                         <div className='overflow-hidden text-ellipsis break-words'>
@@ -175,7 +175,6 @@ export default function GPTs() {
         )
     }
 
-    console.log(tabList)
     return (
         <div className='h-full overflow-y-auto' id='gpts-content'>
             <div className='sticky top-0  mb-1.5 items-center h-14 p-2 font-semibold bg-token-main-surface-primary z-30 mx-auto flex w-full justify-between gap-2 whitespace-nowrap pt-[1.125rem]'>

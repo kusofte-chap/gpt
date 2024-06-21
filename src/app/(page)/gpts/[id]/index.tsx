@@ -15,7 +15,7 @@ import { IGroupListItem } from '@/interface/gpts';
 import IconMenuDown from '@/assets/icons/icon-menu.svg';
 import { useRecoilValue } from 'recoil';
 import { userInfoState } from '@/store/atom';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Spinning from '@/component/Spinning';
 
 class RetriableError extends Error { }
@@ -58,11 +58,11 @@ function AsstPageHeader({ id, asstName }: { id: string, asstName: string }) {
 function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPrompt: (prompt: string) => void }) {
     return (
         <div className='relative h-full'>
-            <AsstPageHeader id='asst_CGNeqJSMpeLm1vum47MFzVVL' asstName='校对员' />
+            <AsstPageHeader id='asst_CGNeqJSMpeLm1vum47MFzVVL' asstName={data?.name} />
             <div className='flex h-full flex-col items-center justify-center text-token-text-primary'>
                 <div className='mb-3 h-20 w-20'>
                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                        <img src={data?.profile_picture_name} alt={data?.name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
+                        <img src={data?.profile_picture_path} alt={data?.name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
                     </div>
                 </div>
                 <div className='flex flex-col items-center gap-2'>
@@ -108,6 +108,9 @@ function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPro
 export default function ChatGptsWindow() {
     const params = useParams()
     const userInfo = useRecoilValue(userInfoState)
+    const searchParams = useSearchParams()
+    const defaultInput = searchParams.get('start_chat') || ''
+
     const [chatList, setChatList] = useState<any[]>([])
 
     const [isDirty, setIsDirty] = useState(false)
@@ -125,6 +128,7 @@ export default function ChatGptsWindow() {
     const [asstDetail, setAsstDetail] = useState<IGroupListItem>()
 
     const [startWrite, setStartWrite] = useState(false)
+    const timer = useRef<any>(null)
 
     const asstApi = useRequest<IGroupListItem, any>(asyncGetGptsInfo, {
         manual: true,
@@ -134,13 +138,23 @@ export default function ChatGptsWindow() {
             }
         }
     })
-
+    const firstLoading = useRef(true)
     useEffect(() => {
         if (params.id) {
+
             asstApi.run(params.id)
         }
     }, [params.id])
 
+    useEffect(() => {
+        if (defaultInput && firstLoading.current && params.id) {
+            firstLoading.current = false
+            history.pushState({}, "", `/gpts/${params?.id}`);
+            onSend(defaultInput)
+            console.log('111', defaultInput, params.id)
+            // console.log('ga', searchParams.get('start_chat'))
+        }
+    }, [])
 
     const updateCacheNode = (htmlContent: string, msgId: string) => {
         if (cacheNode.current) {
@@ -178,13 +192,13 @@ export default function ChatGptsWindow() {
 
     const startTyping = () => {
         let processingQueue = true
-        const timer = setInterval(() => {
+        timer.current = setInterval(() => {
             if (messageQueue.current.length === 0) {
                 return
             };
 
             if (!processingQueue) {
-                clearInterval(timer);
+                clearInterval(timer.current);
                 return
             }
             const dataStream = messageQueue.current.shift() as IStreamItem;
@@ -226,7 +240,7 @@ export default function ChatGptsWindow() {
             },
             conversation_mode: {
                 kind: "gizmo_interaction",
-                assistant_id: asstDetail?.id
+                assistant_id: params?.id
             },
         }
 
@@ -266,7 +280,7 @@ export default function ChatGptsWindow() {
                 } else {
                     const dataStream = JSON.parse(event.data);
                     if (dataStream?.type == MESSAGE_TYPE.TITLE_GENERATION) {
-                        // history.pushState({}, "", `/gpts/${asstDetail?.id}/c/${dataStream.conversation_id}`);
+                        history.pushState({}, "", `/gpts/${params?.id}/c/${dataStream.conversation_id}`);
                     } else {
                         renderRoleChat(dataStream);
                     }
@@ -286,6 +300,9 @@ export default function ChatGptsWindow() {
         if (ctrRef.current) {
             ctrRef.current.abort()
         }
+        if (timer.current) {
+            clearInterval(timer.current);
+        }
     }
 
     const handleClickPrompt = (prompt: string) => {
@@ -304,7 +321,7 @@ export default function ChatGptsWindow() {
         <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
             <div className='flex-1 overflow-hidden'>
                 {
-                    !conversationId ? <AsstWelcome data={asstDetail} onClickPrompt={handleClickPrompt} /> :
+                    (!defaultInput && !conversationId) ? <AsstWelcome data={asstDetail} onClickPrompt={handleClickPrompt} /> :
                         <ScrollToBottom
                             className={scrollBottomRoot}
                             initialScrollBehavior='smooth'
@@ -329,7 +346,7 @@ export default function ChatGptsWindow() {
                                                     index={numId + 1}
                                                     name={asstDetail?.name}
                                                     chatId={item.conversationId}
-                                                    avatar={asstDetail?.profile_picture_name}
+                                                    avatar={asstDetail?.profile_picture_path}
                                                 />
                                             </Fragment>
                                         )

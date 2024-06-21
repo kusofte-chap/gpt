@@ -38,7 +38,7 @@ export function PopoverPanel({
                                 className='gizmo-link cursor-pointer group mx-2 flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/10'>
                                 <div className='h-8 w-8 shrink-0'>
                                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                                        <img src={item.profile_picture_name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
+                                        <img src={item.profile_picture_path} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
                                     </div>
                                 </div>
                                 <div className='flex flex-col space-y-1 truncate'>

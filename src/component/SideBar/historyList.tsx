@@ -181,7 +181,7 @@ function UsedAsstGPTs() {
                             <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
                                 <div className='h-6 w-6 flex-shrink-0'>
                                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                                        <img src={item?.profile_picture_name} alt={item?.name} className='h-full w-full' width={80} height={80} />
+                                        <img src={item?.profile_picture_path} alt={item?.name} className='h-full w-full' width={80} height={80} />
                                     </div>
                                 </div>
                                 <span className='text-sm truncate'>{item?.name || item.description}</span>

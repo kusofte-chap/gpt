@@ -18,10 +18,10 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
     return (
         <Modal open={open}>
             <div className='w-full h-full flex flex-col items-center justify-center'>
-                <div className='flex w-full h-[calc(100vh-30rem)] min-h-[60vh] md:min-h-[70vh] max-w-[95vw] md:max-w-xl flex-col shadow-xl rounded-lg bg-white'>
+                <div className='flex w-full h-[90vh] md:h-[calc(100vh-30rem)] md:min-h-[70vh] max-w-[95vw] md:max-w-xl flex-col shadow-xl rounded-lg bg-white'>
                     <div className='flex-grow overflow-y-auto'>
                         <div className='relative flex h-full flex-col gap-2 overflow-hidden px-2 py-4'>
-                            <div className='flex flex-grow flex-col gap-4 overflow-y-auto px-6 pb-20 pt-16'>
+                            <div className='flex flex-grow flex-col gap-4 overflow-y-auto px-3 md:px-6 pb-20 pt-16'>
                                 <div className='absolute top-4 right-4 z-10 flex items-center justify-end bg-gradient-to-b from-token-main-surface-primary to-transparent pb-2'>
                                     <button className='btn relative btn-ghost btn-circle' onClick={onClose}>
                                         <div className='flex w-full items-center justify-center gap-1.5'>
@@ -29,7 +29,7 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                                         </div>
                                     </button>
                                 </div>
-                                <div className='absolute left-0 bottom-4 w-full'>
+                                <div className='absolute left-0 z-10 bottom-4 w-full'>
                                     <div className='flex min-h-[64px] items-end bg-gradient-to-t from-token-main-surface-primary to-transparent px-2'>
                                         <div className='flex flex-grow flex-col items-center'>
                                             <Link href={`/gpts/${data?.id}`} target='_self' className='btn relative h-12 w-full bg-[#0d0d0d] text-white'>
@@ -44,7 +44,7 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                                 <div className='flex flex-col items-center justify-center text-token-text-primary !h-fit'>
                                     <div className='mb-3 h-20 w-20'>
                                         <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                                            <img src={data?.profile_picture_name} alt={data?.name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
+                                            <img src={data?.profile_picture_path} alt={data?.name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
                                         </div>
                                     </div>
                                     <div className='flex flex-col items-center gap-2'>
@@ -79,7 +79,7 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                                             data?.prompt_starters.map((item) => {
                                                 return (
                                                     <div className='flex' key={item}>
-                                                        <Link href='1' className='group relative ml-2 h-14 flex-grow rounded-xl border border-token-border-medium bg-token-main-surface-primary px-4 hover:bg-token-main-surface-secondary focus:outline-none'>
+                                                        <Link href={`/gpts/${data?.id}?start_chat=${item}`} className='group relative ml-2 h-14 flex-grow rounded-xl border border-token-border-medium bg-token-main-surface-primary px-4 hover:bg-token-main-surface-secondary focus:outline-none'>
                                                             <div className='flex h-full items-center'>
                                                                 <div className="line-clamp-2 text-sm">{item}</div>
                                                             </div>
