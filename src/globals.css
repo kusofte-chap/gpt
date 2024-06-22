@@ -256,14 +256,10 @@ code.hljs, code[class*=language-], pre[class*=language-] {
   vertical-align: baseline
 }
 
-.result-thinking:empty:last-child:after {
-  -webkit-font-smoothing: subpixel-antialiased;
-  -webkit-animation: pulseSize 1.25s ease-in-out infinite;
+.result-thinking:after {
   animation: pulseSize 1.25s ease-in-out infinite;
-  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-
-  background-color: '#0d0d0d';
+  background-color: #0d0d0d;
   border-radius: 50%;
   box-sizing: border-box;
   content: " ";
@@ -271,9 +267,8 @@ code.hljs, code[class*=language-], pre[class*=language-] {
   height: 12px;
   position: absolute;
   top: 7px;
-  -webkit-transform: translateZ(0);
+  left:1em;
   transform: translateZ(0);
-  -webkit-transform-origin: center;
   transform-origin: center;
   width: 12px;
   will-change: transform
@@ -363,8 +358,9 @@ code.hljs, code[class*=language-], pre[class*=language-] {
 
 .scroll-bottom-anchor {
   right: 0;
-  bottom: 20px!important;
+  bottom: 100px!important;
   left: 50%;
+  z-index: 1000;
   width: 26px !important;
   height: 26px!important;
   padding: 2px!important;
@@ -394,4 +390,14 @@ code.hljs, code[class*=language-], pre[class*=language-] {
   opacity: 0;
   height: 0;
   transition: all 0.25s ease-in;
+}
+
+@keyframes pulseSize {
+  0%,to {
+      transform: scaleX(1)
+  }
+
+  50% {
+      transform: scale3d(1.25,1.25,1)
+  }
 }

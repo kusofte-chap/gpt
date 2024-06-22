@@ -1,12 +1,12 @@
 'use client'
 
 import cn from 'classnames'
-import { ChangeEvent, useContext, useMemo, useRef, useState } from "react"
-import { deleteConversation, renameConversation } from '@/api/gpt'
+import { ChangeEvent, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { reNameConversation } from '@/api/gpt'
 import MoreIcon from '@/assets/icons/icon-more.svg'
 import { IHistoryItem } from "@/interface/history"
 import { ClickAwayListener, Portal } from '@mui/material'
-import { PopoverProvider, PopoverContext } from "./context"
+import { PopoverContext } from "./context"
 import IconRename from '@/assets/icons/icon-rename.svg'
 import IconDelete from '@/assets/icons/icon-delete.svg'
 import { useRequest } from 'ahooks'
@@ -16,20 +16,23 @@ import IconGptsLogo from '@/assets/icons/icon-gpts-logo.svg'
 import _groupBy from 'lodash/groupBy'
 import Link from 'next/link'
 import toast from '@/until/message'
-import Spinning from '../Spinning'
 import {
     CSSTransition,
     TransitionGroup,
 } from 'react-transition-group';
 
-function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: string) => void }) {
+export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: string) => void }) {
     const { activeItemId, setActiveItemId } = useContext(PopoverContext)
     const [openPopup, setOpenPopup] = useState(false)
-    const [renameValue, setRenameValue] = useState('')
     const [isEditing, setIsEditing] = useState(false)
+    const [renameValue, setRenameValue] = useState(data.title)
 
     const anchorEl = useRef<HTMLButtonElement | null>(null)
     const [coord, setCoord] = useState<{ x: number, y: number } | null>(null)
+
+    useEffect(() => {
+        setRenameValue(data.title)
+    }, [data.title])
 
     const handleIconButton = (event: any) => {
         setOpenPopup((prev) => !prev);
@@ -58,10 +61,12 @@ function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: stri
                 return
             }
             isLoading = true
-            renameConversation(data.conversation_id, inputValue).then((rst) => {
-                setRenameValue(inputValue)
-            }).catch((error) => {
+            setRenameValue(inputValue)
+            reNameConversation({ conversation_id: data.conversation_id, title: inputValue }).then(() => {
+                toast.success("重命名成功")
+            }).catch(() => {
                 toast.error("重命名失败")
+                setRenameValue(data.title)
             }).finally(() => {
                 isLoading = false
             })
@@ -77,6 +82,13 @@ function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: stri
         return data.conversation_id === activeItemId
     }, [activeItemId])
 
+    const genUrl = (data: IHistoryItem) => {
+        if (data.type === 'chat') {
+            return `/chat/${data.conversation_id}`
+        }
+        return `/gpts/${data.assistant_id}/c/${data.conversation_id}`
+    }
+
     return (
         <li
             ref={data.nodeRef}
@@ -89,12 +101,13 @@ function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: stri
                     <input
                         autoFocus
                         maxLength={50}
-                        defaultValue={renameValue || data.title}
+                        defaultValue={renameValue}
                         onBlur={handleOnBlurRename}
+                        onKeyDown={e => e.key === 'Enter' && handleOnBlurRename(e as any)}
                     />
-                </div> : <Link href={`/chat/${data.conversation_id}`} className="flex items-center gap-2 p-2" onClick={handleItemClick}>
+                </div> : <Link href={genUrl(data)} className="flex items-center gap-2 p-2" onClick={handleItemClick}>
                     <div className='relative grow overflow-hidden whitespace-nowrap'>
-                        {data.title}
+                        {renameValue}
                         <div className={cn('absolute bottom-0 right-0 top-0 bg-gradient-to-l to-transparent from-token-sidebar-surface-primary  w-10 from-0% ', {
                             'group-hover:from-token-sidebar-surface-secondary group-hover:w-20 group-hover:from-60%': !isActive,
                             'from-token-sidebar-surface-secondary w-20 from-60%': isActive
@@ -138,7 +151,7 @@ function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: stri
     )
 }
 
-function HistoryGroup({ chatList, onDelete, title, }: {
+export function HistoryGroup({ chatList, onDelete, title, }: {
     chatList: IHistoryItem[],
     title: string,
     onDelete: (id: string) => void
@@ -167,7 +180,7 @@ function HistoryGroup({ chatList, onDelete, title, }: {
     )
 }
 
-function UsedAsstGPTs() {
+export function UsedAsstGPTs() {
     const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed)
     if (asstListApi.loading) {
         return null
@@ -207,36 +220,5 @@ function UsedAsstGPTs() {
                 </button>
             </Link>
         </div>
-    )
-}
-
-export function HistoryList({ list, loading, onDelete }: {
-    list: any[],
-    loading: boolean,
-    onDelete: (id: string) => void
-}) {
-    return (
-        <PopoverProvider>
-            <div>
-                <div className='flex flex-col gap-2 pb-2 text-token-text-primary text-sm'>
-                    <UsedAsstGPTs />
-                    <div className='empty:hidden'>
-                        {
-                            list?.map((gItem, index) => (
-                                <HistoryGroup
-                                    key={index}
-                                    title={gItem[0]}
-                                    chatList={gItem[1]}
-                                    onDelete={onDelete}
-                                />
-                            ))
-                        }
-                    </div>
-                </div>
-                <div className={cn('w-full items-center justify-center flex-1', { 'hidden': !loading, flex: loading })}>
-                    <Spinning />
-                </div>
-            </div>
-        </PopoverProvider>
     )
 }

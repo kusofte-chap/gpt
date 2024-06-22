@@ -13,7 +13,7 @@ export const getDefaultPrompts = async ()=>{
 // 获取历史对话
 export const getHistoryList = async (page:number)=>{
     try {
-        return await request.get(`/api/conversations`,{params:{page,size:50}}) as any
+        return await request.get(`/api/conversations`,{params:{page,size:28}}) as any
     } catch (error) {
         console.error(`getHistoryList error: ${error}`)
         return new Error(error as any)
@@ -24,7 +24,7 @@ export const getHistoryList = async (page:number)=>{
 // 查询对话记录
 export const getHistoryDetail = async (conversationId:string)=>{
     try {
-        return await request.get(`/api/conversations/${conversationId}`)  as any
+        return await request.get(`/api/conversations/${conversationId}`,{params:{limit:100}})  as any
     } catch (error) {
         console.error(`getHistoryDetail error: ${error}`)
         return new Error(error as any)
@@ -32,29 +32,16 @@ export const getHistoryDetail = async (conversationId:string)=>{
 }
 
 // 重命名对话名称
-export const renameConversation = async (conversationId:string,title:string)=>{
-    try {
-        return await request.patch(`/api/conversation/${conversationId}`,{
-            title
-        })  as any
-    } catch (error) {
-        console.error(`renameConversation error: ${error}`)
-        return new Error(error as any)
-    }
+export const reNameConversation =  (params:{conversation_id:string,title:string})=>{
+   return request.post(`/api/conversation/updateTitle`,params) as any
 }
 
 // 删除对话
-export const deleteConversation = async (conversationId:string)=>{
-    try {
-        return await request.patch(`/api/conversation/${conversationId}`,{
-            is_visible:false
-        })  as any
-    } catch (error) {
-        console.error(`deleteConversation error: ${error}`)
-        return new Error(error as any)
-    }
+export const deleteConversation =  (conversation_id:string)=>{
+    return request.delete(`/api/conversation`,{
+        data:{conversation_id}
+    })  as any
 }
-
 
 // 生成图片
 export const generateImage = async (params: {

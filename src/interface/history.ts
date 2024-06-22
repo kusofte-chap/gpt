@@ -7,6 +7,8 @@ export interface IHistoryItem {
     title: string,
     updateTime: string
     dateKey: string
+    assistant_id: string
+    type:'chat'|'gpt'
     nodeRef: React.RefObject<HTMLLIElement>
 }
 

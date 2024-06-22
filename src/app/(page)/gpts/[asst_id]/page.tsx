@@ -1,6 +1,5 @@
 import React from 'react'
-import AsstChatWindow from '.'
-
+import AsstChatWindow from './AsstChatWindow'
 
 export default function AssetChatHome() {
     return (

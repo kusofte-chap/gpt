@@ -1,13 +1,13 @@
 
 import React, { useEffect, useRef } from 'react'
 import GptAvatar from '@/assets/logo.svg'
-
 import IconAudio from '@/assets/icons/icon-audio.svg'
 import IconCopy from '@/assets/icons/icon-copy.svg'
 import IconUnagree from '@/assets/icons/icon-unagree.svg'
 import IconRestart from '@/assets/icons/icon-restart.svg'
 import IconModel from '@/assets/icons/icon-model.svg'
 import mdParser from '@/until/mdit'
+import cn from 'classnames'
 
 interface ISelfChatItemProps {
     id: string
@@ -94,7 +94,7 @@ export function GptChatItem(props: IGptChatItemProps) {
                         <div className='font-semibold select-none'>{name}</div>
                         <div className='flex-col gap-1 md:gap-3 group'>
                             <div className='flex flex-grow flex-col max-w-full'>
-                                <div className='min-h-[20px] flex flex-col items-start break-words overflow-x-auto gap-3' data-role='assistant' >
+                                <div className={cn('relative min-h-[20px] flex flex-col items-start break-words overflow-x-auto gap-3', { 'result-thinking': chatId?.startsWith('faker') })} data-role='assistant' >
                                     {selfRender && <div className='markdown prose w-full break-words' data-message-id={msgId} />}
                                 </div>
                             </div>

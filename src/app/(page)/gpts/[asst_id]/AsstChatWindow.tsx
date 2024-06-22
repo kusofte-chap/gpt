@@ -1,38 +1,26 @@
 'use client'
 
 import React, { Fragment, useEffect, useRef, useState } from 'react'
-import ScrollToBottom from 'react-scroll-to-bottom';
+import { useRequest } from 'ahooks';
+import moment from 'moment';
+import { faker } from '@faker-js/faker';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
 import mdParser from '@/until/mdit';
 import GlobalInputForm from '@/component/Footer';
 import { EventSourceMessage, EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { CHAT_ROLE, IStreamItem, MESSAGE_TYPE } from '@/interface/chat';
-import 'highlight.js/styles/atom-one-dark.css';
-import { css } from '@emotion/css'
-import { useRequest } from 'ahooks';
 import { asyncGetGptsInfo } from '@/api/gpts';
 import { IGroupListItem } from '@/interface/gpts';
-import IconMenuDown from '@/assets/icons/icon-menu.svg';
-import { useRecoilValue } from 'recoil';
-import { userInfoState } from '@/store/atom';
+import { newConversationState, userInfoState } from '@/store/atom';
 import { useParams, useSearchParams } from 'next/navigation';
 import Spinning from '@/component/Spinning';
+import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
+import { FatalError, RetriableError } from '@/api/request';
+import IconMenuDown from '@/assets/icons/icon-menu.svg';
+import HistoryRecordChat from '@/component/HistoryRecordChat';
 
-class RetriableError extends Error { }
-
-class FatalError extends Error { }
-
-const scrollBottomRoot = css({
-    width: '100%',
-    height: '100%',
-    '&>div': {
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto'
-    }
-})
-
-function AsstPageHeader({ id, asstName }: { id: string, asstName: string }) {
+export function AsstPageHeader({ id, asstName }: { id: string, asstName: string }) {
     // const userInfo = useRecoilValue(userInfoState)
     return (
         <div className='sticky top-0 juice:p-3 mb-1.5 flex items-center justify-between z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
@@ -105,30 +93,32 @@ function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPro
     )
 }
 
-export default function ChatGptsWindow() {
-    const params = useParams()
-    const userInfo = useRecoilValue(userInfoState)
+export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGptInfoPage?: boolean }) {
+    const { asst_id, thread_id } = useParams()
     const searchParams = useSearchParams()
-    const defaultInput = searchParams.get('start_chat') || ''
+    const startChatPrompt = searchParams.get('start_chat') || ''
+
+    const userInfo = useRecoilValue(userInfoState)
+    const setNewConversation = useSetRecoilState(newConversationState)
 
     const [chatList, setChatList] = useState<any[]>([])
-
     const [isDirty, setIsDirty] = useState(false)
+
+
     const messageQueue = useRef<IStreamItem[]>([])
     const messageBuffer = useRef<string>('')
 
+    const currentChatIndex = useRef<number>(0)
     const cacheNode = useRef<HTMLDivElement | null>(null)
     const ctrRef = useRef<AbortController | null>(null)
+    const timer = useRef<any>()
+    const firstLoading = useRef(true)
+    const hstRecordLength = useRef(0)
 
     const [isStreaming, setIsStreaming] = useState(false)
-    const currentChatIndex = useRef<number>(0)
-
-    const [conversationId, setConversationId] = useState<string>()
-
     const [asstDetail, setAsstDetail] = useState<IGroupListItem>()
 
     const [startWrite, setStartWrite] = useState(false)
-    const timer = useRef<any>(null)
 
     const asstApi = useRequest<IGroupListItem, any>(asyncGetGptsInfo, {
         manual: true,
@@ -138,57 +128,19 @@ export default function ChatGptsWindow() {
             }
         }
     })
-    const firstLoading = useRef(true)
     useEffect(() => {
-        if (params.id) {
-
-            asstApi.run(params.id)
+        if (asst_id) {
+            asstApi.run(asst_id)
         }
-    }, [params.id])
+    }, [asst_id])
 
     useEffect(() => {
-        if (defaultInput && firstLoading.current && params.id) {
+        if (startChatPrompt && firstLoading.current && isInitGptInfoPage) {
             firstLoading.current = false
-            history.pushState({}, "", `/gpts/${params?.id}`);
-            onSend(defaultInput)
-            console.log('111', defaultInput, params.id)
-            // console.log('ga', searchParams.get('start_chat'))
+            history.pushState({}, "", `/gpts/${asst_id}`);
+            onSend(startChatPrompt)
         }
-    }, [])
-
-    const updateCacheNode = (htmlContent: string, msgId: string) => {
-        if (cacheNode.current) {
-            cacheNode.current.innerHTML = htmlContent;
-        } else {
-            cacheNode.current = document.createElement('div');
-            cacheNode.current.setAttribute('class', 'result-streaming markdown prose w-full break-words');
-            cacheNode.current.setAttribute('data-message-id', msgId);
-            const mdParent = document.querySelector(`div[data-gpt-index="${currentChatIndex.current}"] div[data-role="assistant"]`);
-            mdParent?.appendChild(cacheNode.current);
-            cacheNode.current.innerHTML = htmlContent;
-        }
-    };
-
-    const renderRoleChat = (data: IStreamItem) => {
-        if (data.message.role === CHAT_ROLE.USER) {
-            setStartWrite(true)
-            setChatList((old) => {
-                const newChatList = [...old, {
-                    id: data.message.message_id,
-                    content: data.message.content.parts[0],
-                    conversationId: data.conversation_id,
-                    //[1] 1-> 2
-                    //[1,2] 2-> 4
-                    //[1,2,3] 3-> 6
-                }]
-                currentChatIndex.current = 2 * newChatList.length
-                setConversationId(data.conversation_id)
-                return newChatList
-            });
-        } else if (data.message?.role === CHAT_ROLE.ASSISTANT) {
-            messageQueue.current.push(data);
-        }
-    }
+    }, [isInitGptInfoPage])
 
     const startTyping = () => {
         let processingQueue = true
@@ -226,12 +178,59 @@ export default function ChatGptsWindow() {
         }, 50)
     }
 
-
     useEffect(() => {
         if (startWrite) {
             startTyping()
         }
     }, [startWrite])
+
+    const updateCacheNode = (htmlContent: string, msgId: string) => {
+        if (cacheNode.current) {
+            cacheNode.current.innerHTML = htmlContent;
+        } else {
+            cacheNode.current = document.createElement('div');
+            cacheNode.current.setAttribute('class', 'result-streaming markdown prose w-full break-words');
+            cacheNode.current.setAttribute('data-message-id', msgId);
+            const mdParent = document.querySelector(`div[data-gpt-index="${currentChatIndex.current}"] div[data-role="assistant"]`);
+            mdParent?.appendChild(cacheNode.current);
+            cacheNode.current.innerHTML = htmlContent;
+        }
+    };
+
+    const renderRoleChat = (data: IStreamItem) => {
+        if (data.message.role === CHAT_ROLE.USER) {
+            setChatList((old) => {
+                const newChatList = [...old]
+                newChatList[newChatList.length - 1] = {
+                    id: data.message.message_id,
+                    content: data.message.content.parts[0],
+                    conversationId: data.conversation_id,
+                }
+                return newChatList
+            });
+            const t = setTimeout(() => {
+                clearTimeout(t)
+                setStartWrite(true)
+            }, 200)
+
+        } else if (data.message?.role === CHAT_ROLE.ASSISTANT) {
+            messageQueue.current.push(data);
+        }
+    }
+
+    const preRenderRole = (content: string) => {
+        setChatList((old) => {
+            const newChatList = old.concat([
+                {
+                    id: `faker_${faker.string.uuid()}`,
+                    content,
+                    conversationId: `faker_${faker.string.uuid()}`,
+                }
+            ])
+            currentChatIndex.current = 2 * newChatList.length + hstRecordLength.current
+            return newChatList
+        });
+    }
 
     const onSend = (inputPrompt: string) => {
         const payload: any = {
@@ -240,25 +239,25 @@ export default function ChatGptsWindow() {
             },
             conversation_mode: {
                 kind: "gizmo_interaction",
-                assistant_id: params?.id
+                assistant_id: asst_id
             },
         }
 
         // 继续上次会话
-        if (conversationId) {
-            payload.conversation_id = conversationId
+        if (thread_id) {
+            payload.conversation_id = thread_id
         }
 
-        if (!isDirty) {
-            setIsDirty(true)
-        }
+        setIsDirty(true)
 
-        const ctl = new AbortController();
-        ctrRef.current = ctl
+        ctrRef.current = new AbortController();
+
         setIsStreaming(true)
+        preRenderRole(inputPrompt.trim())
+
         fetchEventSource(`http://93.127.216.22:8089/api/conversation`, {
             method: "POST",
-            signal: ctl.signal,
+            signal: ctrRef.current?.signal,
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("gpt_token")}`,
                 'Content-Type': 'application/json',
@@ -275,22 +274,30 @@ export default function ChatGptsWindow() {
             },
             onmessage: (event: EventSourceMessage) => {
                 if (event.data == "[DONE]") {
-                    ctl.abort();
+                    ctrRef.current?.abort();
                     return
                 } else {
                     const dataStream = JSON.parse(event.data);
                     if (dataStream?.type == MESSAGE_TYPE.TITLE_GENERATION) {
-                        history.pushState({}, "", `/gpts/${params?.id}/c/${dataStream.conversation_id}`);
+                        history.pushState({}, "", `/gpts/${asst_id}c/${dataStream.conversation_id}`);
+                        setNewConversation({
+                            conversation_id: dataStream.conversation_id,
+                            createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                            model: 'gpt-4o',
+                            title: dataStream.title,
+                            updateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                            type: 'gpt',
+                        })
                     } else {
                         renderRoleChat(dataStream);
                     }
                 }
             },
             onclose() {
-                ctl.abort();
+                ctrRef.current?.abort();
             },
             onerror: (event: any) => {
-                ctl.abort();
+                ctrRef.current?.abort();
                 setIsStreaming(false)
             }
         });
@@ -309,6 +316,10 @@ export default function ChatGptsWindow() {
         onSend(prompt)
     }
 
+    const getRecordLength = (len: number) => {
+        hstRecordLength.current = len
+    }
+
     if (!asstDetail) {
         return (
             <div className='flex h-full flex-col items-center justify-center'>
@@ -321,14 +332,17 @@ export default function ChatGptsWindow() {
         <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
             <div className='flex-1 overflow-hidden'>
                 {
-                    (!defaultInput && !conversationId) ? <AsstWelcome data={asstDetail} onClickPrompt={handleClickPrompt} /> :
-                        <ScrollToBottom
-                            className={scrollBottomRoot}
-                            initialScrollBehavior='smooth'
-                            followButtonClassName="scroll-bottom-anchor"
-                        >
+                    (isInitGptInfoPage && !isDirty) ? <AsstWelcome data={asstDetail} onClickPrompt={handleClickPrompt} /> :
+                        <ScrollBottomWrapper>
                             <div className='flex flex-col text-sm pb-9'>
                                 <AsstPageHeader asstName={asstDetail?.name} id={asstDetail?.id} />
+                                {!isInitGptInfoPage &&
+                                    <HistoryRecordChat
+                                        asstId={asst_id as string}
+                                        conversationId={thread_id as string}
+                                        getRecordLength={getRecordLength}
+                                    />
+                                }
                                 {
                                     chatList.map((item, index) => {
                                         const numId = index * 2 + 1
@@ -353,7 +367,7 @@ export default function ChatGptsWindow() {
                                     })
                                 }
                             </div>
-                        </ScrollToBottom>
+                        </ScrollBottomWrapper>
                 }
             </div>
             <GlobalInputForm

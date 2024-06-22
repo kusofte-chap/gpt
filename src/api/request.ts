@@ -40,3 +40,8 @@ request.interceptors.response.use(
 )
 
 export default request;
+
+
+export class RetriableError extends Error { }
+
+export class FatalError extends Error { }

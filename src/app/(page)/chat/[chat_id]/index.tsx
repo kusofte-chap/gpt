@@ -1,34 +1,22 @@
 'use client'
 
-import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import ScrollToBottom from 'react-scroll-to-bottom';
+import React, { Fragment, useEffect, useRef, useState } from 'react'
+import { faker } from '@faker-js/faker';
+import { useSetRecoilState } from 'recoil';
+import moment from 'moment';
+import mdParser from '@/until/mdit';
 import PageHeader from '@/component/PageHeader';
 import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
-import mdParser from '@/until/mdit';
 import GlobalInputForm from '@/component/Footer';
 import { EventSourceMessage, EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { CHAT_ROLE, IStreamItem, MESSAGE_TYPE } from '@/interface/chat';
-import HistoryChatList from './HistoryChatList';
-import 'highlight.js/styles/atom-one-dark.css';
 import { useMediaQuery } from '@mui/material';
-import { css } from '@emotion/css'
 import { CHAT_MODEL_CONVERTER } from '@/interface/common';
 import Welcome from '@/component/Welcome';
-
-
-class RetriableError extends Error { }
-
-class FatalError extends Error { }
-
-const scrollBottomRoot = css({
-    width: '100%',
-    height: '100%',
-    '&>div': {
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto'
-    }
-})
+import { newConversationState } from '@/store/atom';
+import { FatalError, RetriableError } from '@/api/request';
+import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
+import HistoryRecordChat from '@/component/HistoryRecordChat';
 
 interface IContentProps {
     conversationId?: string
@@ -40,15 +28,68 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     const [chatList, setChatList] = useState<any[]>([])
     const [isDirty, setIsDirty] = useState(false)
     const [startWrite, setStartWrite] = useState(false)
-    const messageQueue = useRef<IStreamItem[]>([])
+    const [isStreaming, setIsStreaming] = useState(false)
 
+    const messageQueue = useRef<IStreamItem[]>([])
     const messageBuffer = useRef<string>('')
     const cacheNode = useRef<HTMLDivElement | null>(null)
     const ctrRef = useRef<AbortController | null>(null)
 
-    const [isStreaming, setIsStreaming] = useState(false)
     const currentChatIndex = useRef(0)
     const hstRecordLength = useRef(0)
+
+    const setNewConversation = useSetRecoilState(newConversationState)
+
+    const typingTimer = useRef<any>()
+
+    const startTyping = () => {
+        let processingQueue = true
+        typingTimer.current = setInterval(() => {
+            if (messageQueue.current.length === 0) {
+                return
+            };
+
+            if (!processingQueue) {
+                clearInterval(typingTimer.current);
+                return
+            }
+            const dataStream = messageQueue.current.shift() as IStreamItem;
+            try {
+                if (dataStream.message && dataStream.message.content) {
+                    const buffer = dataStream.message.content.parts?.[0].toString()
+                    if (buffer) {
+                        messageBuffer.current += buffer
+                    }
+
+                    if (dataStream.message.status === 'in_progress') {
+                        updateCacheNode(mdParser.render(messageBuffer.current), dataStream.message.message_id);
+                    } else if (dataStream.message.status === 'finished_successfully' || dataStream.message.status === 'finished') {
+                        messageBuffer.current = '';
+                        if (cacheNode.current) {
+                            cacheNode.current.classList.remove("result-streaming");
+                        }
+                        cacheNode.current = null;
+                        processingQueue = false
+                        setIsStreaming(false)
+                        setStartWrite(false)
+                    }
+                }
+            } catch (error) {
+                setStartWrite(false)
+                setIsStreaming(false)
+                typingTimer.current = null
+
+            } finally {
+
+            }
+        }, 30)
+    }
+
+    useEffect(() => {
+        if (startWrite) {
+            startTyping()
+        }
+    }, [startWrite])
 
     const updateCacheNode = (htmlContent: string, msgId: string) => {
         if (cacheNode.current) {
@@ -66,63 +107,36 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     const renderRoleChat = (data: IStreamItem) => {
         if (data.message.role === CHAT_ROLE.USER) {
             setChatList((old) => {
-                const newChatList = [...old, {
+                const newChatList = [...old]
+                newChatList[newChatList.length - 1] = {
                     id: data.message.message_id,
                     content: data.message.content.parts[0],
                     conversationId: data.conversation_id,
-                }]
-                currentChatIndex.current = (newChatList.length + hstRecordLength.current) * 2
+                }
                 return newChatList
             });
+            const t = setTimeout(() => {
+                clearTimeout(t)
+                setStartWrite(true)
+            }, 200)
         } else if (data.message?.role === CHAT_ROLE.ASSISTANT) {
             messageQueue.current.push(data);
         }
     }
 
-    const startTyping = () => {
-        let processingQueue = true
-        const timer = setInterval(() => {
-            if (messageQueue.current.length === 0) {
-                return
-            };
-
-            if (!processingQueue) {
-                clearInterval(timer);
-                return
-            }
-            const dataStream = messageQueue.current.shift() as IStreamItem;
-            try {
-                if (dataStream.message && dataStream.message.content && dataStream.message.content.parts) {
-                    if (dataStream.message.content.parts[0]) {
-                        messageBuffer.current += dataStream.message.content.parts[0]
-                    }
-
-                    if (dataStream.message.status === 'in_progress') {
-                        updateCacheNode(mdParser.render(messageBuffer.current), dataStream.message.message_id);
-                    } else if (dataStream.message.status === 'finished_successfully' || dataStream.message.status === 'finished') {
-                        messageBuffer.current = '';
-                        if (cacheNode.current) {
-                            cacheNode.current.classList.remove("result-streaming");
-                        }
-                        cacheNode.current = null;
-                        processingQueue = false
-                    }
+    const preRenderRole = (content: string) => {
+        setChatList((old) => {
+            const newChatList = old.concat([
+                {
+                    id: `faker_${faker.string.uuid()}`,
+                    content,
+                    conversationId: `faker_${faker.string.uuid()}`,
                 }
-            } catch (error) {
-                console.error('error update', error);
-                setStartWrite(false)
-                setIsStreaming(false)
-            } finally {
-
-            }
-        }, 50)
+            ])
+            currentChatIndex.current = 2 * newChatList.length + hstRecordLength.current
+            return newChatList
+        });
     }
-
-    useEffect(() => {
-        if (startWrite) {
-            startTyping()
-        }
-    }, [startWrite])
 
     const onSend = (inputPrompt: string) => {
         const payload: any = {
@@ -143,12 +157,14 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
             setIsDirty(true)
         }
 
-        const ctl = new AbortController();
-        ctrRef.current = ctl
+        ctrRef.current = new AbortController();
+
         setIsStreaming(true)
+        preRenderRole(inputPrompt.trim())
+
         fetchEventSource(`http://93.127.216.22:8089/api/conversation`, {
             method: "POST",
-            signal: ctl.signal,
+            signal: ctrRef.current.signal,
             headers: {
                 Authorization: `Bearer ${localStorage.getItem("gpt_token")}`,
                 'Content-Type': 'application/json',
@@ -165,24 +181,29 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
             },
             onmessage: (event: EventSourceMessage) => {
                 if (event.data == "[DONE]") {
-                    ctl.abort();
-                    setIsStreaming(false)
-                    setStartWrite(false)
-                    return
+                    ctrRef.current?.abort();
                 } else {
                     const dataStream = JSON.parse(event.data);
                     if (dataStream?.type == MESSAGE_TYPE.TITLE_GENERATION) {
                         history.pushState({}, "", `/chat/${dataStream.conversation_id}`);
+                        setNewConversation({
+                            conversation_id: dataStream.conversation_id,
+                            createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                            model: 'gpt-4o',
+                            title: dataStream.title,
+                            updateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
+                            type: 'chat',
+                        })
                     } else {
                         renderRoleChat(dataStream);
                     }
                 }
             },
             onclose() {
-                ctl.abort();
+                ctrRef.current?.abort();
             },
             onerror: (event: any) => {
-                ctl.abort();
+                ctrRef.current?.abort();
                 setIsStreaming(false)
             }
         });
@@ -192,6 +213,12 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
         if (ctrRef.current) {
             ctrRef.current.abort()
         }
+
+        if (typingTimer.current) {
+            clearInterval(typingTimer.current);
+        }
+        setIsStreaming(false)
+        setStartWrite(false)
     }
 
     const getRecordLength = (len: number) => {
@@ -202,14 +229,10 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
         <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
             {
                 isNewChat && !isDirty ? <Welcome /> : <div className='flex-1 overflow-hidden'>
-                    <ScrollToBottom
-                        className={scrollBottomRoot}
-                        initialScrollBehavior='smooth'
-                        followButtonClassName="scroll-bottom-anchor"
-                    >
+                    <ScrollBottomWrapper >
                         <div className='flex flex-col text-sm pb-9'>
                             {isDesktop && <PageHeader modeList={CHAT_MODEL_CONVERTER} />}
-                            {!isNewChat && <HistoryChatList getRecordLength={getRecordLength} />}
+                            {!isNewChat && <HistoryRecordChat conversationId={conversationId as string} getRecordLength={getRecordLength} />}
                             {
                                 chatList.map((item, index) => {
                                     const numId = hstRecordLength.current + index * 2 + 1
@@ -222,7 +245,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
                                 })
                             }
                         </div>
-                    </ScrollToBottom>
+                    </ScrollBottomWrapper>
                 </div>
             }
             <GlobalInputForm
