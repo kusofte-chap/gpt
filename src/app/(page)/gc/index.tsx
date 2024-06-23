@@ -163,7 +163,7 @@ export default function AiGcWindow() {
                         <div className='hidden md:block md:shadow-3xl-btr' >
                             <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
                         </div>
-                        <div className='w-full py-0 px-3 text-base m-auto md:py-5 md:px-5 lg:px-1 xl:px-5'>
+                        <div className='w-full py-0 px-3 text-base m-auto pt-4 md:py-5 md:px-5 lg:px-1 xl:px-5'>
                             {imageListApi.loading && <LoadingSkeleton />}
                             <div id='gallery-started' className="w-full pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem] m-auto">
                                 <CreatingSkeleton isCreating={isCreating} />

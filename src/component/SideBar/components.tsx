@@ -213,7 +213,7 @@ export function UsedAsstGPTs() {
                             <ChatGptLogo />
                         </div>
                     </div>
-                    <span className='text-sm'>ChatGpt</span>
+                    <span className='text-sm'>ChatGPT</span>
                 </button>
             </Link>
             {
