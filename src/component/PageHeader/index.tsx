@@ -4,12 +4,13 @@ import { Menu, MenuItem, useMediaQuery } from '@mui/material';
 import cn from 'classnames'
 import IconMenu from '@/assets/icons/icon-menu.svg'
 import IconGpt from '@/assets/icons/icon-gpt.svg'
-import IconGpts from '@/assets/icons/icon-gpts.svg'
 import IconRight from '@/assets/icons/icon-right.svg'
-import IconShare from '@/assets/icons/icon-share.svg'
 import { CHAT_MODEL, IModelOption } from '@/interface/common';
 import { useSetRecoilState } from 'recoil';
 import { currentChatModelState } from '@/store/atom';
+import StyledTooltip from '../StyledTooltip';
+import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
+import { useToggleSideBar } from '@/hooks/index';
 
 export function ModelSelect({
     modeList,
@@ -134,16 +135,25 @@ export function ModelSelect({
 }
 
 export default function PageHeader({ modeList, onChangeModel }: { modeList: IModelOption[], onChangeModel?: (m: CHAT_MODEL) => void }) {
+    const { openSidebar, toggleCloseSideBar } = useToggleSideBar()
+
     return (
         <div className='sticky top-0 mb-1.5 flex items-center justify-between z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
             <div className='flex items-center gap-2 overflow-hidden'>
+                <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
+                    <button
+                        onClick={toggleCloseSideBar}
+                        className={cn('h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary', { 'hidden': openSidebar })}>
+                        <IconCloseMenu />
+                    </button>
+                </StyledTooltip>
                 <ModelSelect modeList={modeList} onChange={onChangeModel} />
             </div>
-            <div className='flex gap-2 pr-1'>
+            {/* <div className='flex gap-2 pr-1'>
                 <button className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary'>
                     <IconShare />
                 </button>
-            </div>
+            </div> */}
         </div >
     )
 }

@@ -23,6 +23,7 @@
     "animejs": "^3.2.2",
     "axios": "^1.7.2",
     "classnames": "^2.5.1",
+    "clipboard": "^2.0.11",
     "highlight.js": "^11.9.0",
     "katex": "^0.16.10",
     "lodash": "^4.17.21",

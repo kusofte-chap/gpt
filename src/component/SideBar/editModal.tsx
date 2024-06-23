@@ -224,8 +224,6 @@ function EditAvatar() {
     const [imageSource, setImageSource] = useState<string | File>(userInfo?.user?.avatarUrl || '');
     const [errorMsg, setErrorMsg] = useState('');
 
-    console.log(userInfo, 'userInfo')
-
     const avatarApi = useRequest(uploadAvatar, {
         manual: true,
         onSuccess: (rst: any) => {

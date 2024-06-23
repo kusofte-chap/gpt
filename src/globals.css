@@ -358,7 +358,7 @@ code.hljs, code[class*=language-], pre[class*=language-] {
 
 .scroll-bottom-anchor {
   right: 0;
-  bottom: 100px!important;
+  bottom: 68px!important;
   left: 50%;
   z-index: 1000;
   width: 26px !important;

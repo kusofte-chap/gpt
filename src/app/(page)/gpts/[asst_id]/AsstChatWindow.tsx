@@ -3,6 +3,7 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
 import { useRequest } from 'ahooks';
 import moment from 'moment';
+import cn from 'classnames'
 import { faker } from '@faker-js/faker';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
@@ -19,11 +20,26 @@ import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
 import { FatalError, RetriableError } from '@/api/request';
 import IconMenuDown from '@/assets/icons/icon-menu.svg';
 import HistoryRecordChat from '@/component/HistoryRecordChat';
+import StyledTooltip from '@/component/StyledTooltip';
+import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
+import { useToggleSideBar } from '@/hooks/index';
+import { useMediaQuery } from '@mui/material';
 
 export function AsstPageHeader({ id, asstName }: { id: string, asstName: string }) {
-    // const userInfo = useRecoilValue(userInfoState)
+    const { openSidebar, toggleCloseSideBar } = useToggleSideBar()
+    const isDesktop = useMediaQuery('(min-width: 768px)')
+
     return (
-        <div className='sticky top-0 juice:p-3 mb-1.5 flex items-center justify-between z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
+        <div className='sticky top-0 mb-1.5 flex items-center gap-2 z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
+            {isDesktop && !openSidebar && <div className='flex items-center gap-2 overflow-hidden'>
+                <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
+                    <button
+                        onClick={toggleCloseSideBar}
+                        className={cn('h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary', { 'hidden': openSidebar })}>
+                        <IconCloseMenu />
+                    </button>
+                </StyledTooltip>
+            </div>}
             <div className='flex items-center gap-2 overflow-hidden'>
                 <button className='group flex cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary text-token-text-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
                     {asstName}
@@ -345,7 +361,7 @@ export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGpt
                                 }
                                 {
                                     chatList.map((item, index) => {
-                                        const numId = index * 2 + 1
+                                        const numId = hstRecordLength.current + index * 2 + 1
                                         return (
                                             <Fragment key={numId}>
                                                 <SelfChatItem

@@ -5,7 +5,7 @@ import { ChangeEvent, useContext, useEffect, useMemo, useRef, useState } from "r
 import { reNameConversation } from '@/api/gpt'
 import MoreIcon from '@/assets/icons/icon-more.svg'
 import { IHistoryItem } from "@/interface/history"
-import { ClickAwayListener, Portal } from '@mui/material'
+import { ClickAwayListener, Portal, useMediaQuery } from '@mui/material'
 import { PopoverContext } from "./context"
 import IconRename from '@/assets/icons/icon-rename.svg'
 import IconDelete from '@/assets/icons/icon-delete.svg'
@@ -20,6 +20,9 @@ import {
     CSSTransition,
     TransitionGroup,
 } from 'react-transition-group';
+import ChatGptLogo from '@/assets/logo.svg'
+import { useSetRecoilState } from 'recoil'
+import { mobileDrawerState } from '@/store/atom'
 
 export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: string) => void }) {
     const { activeItemId, setActiveItemId } = useContext(PopoverContext)
@@ -27,8 +30,12 @@ export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (i
     const [isEditing, setIsEditing] = useState(false)
     const [renameValue, setRenameValue] = useState(data.title)
 
+    const isMobile = useMediaQuery('(max-width: 768px)');
+
     const anchorEl = useRef<HTMLButtonElement | null>(null)
     const [coord, setCoord] = useState<{ x: number, y: number } | null>(null)
+
+    const setMobileSideBar = useSetRecoilState(mobileDrawerState)
 
     useEffect(() => {
         setRenameValue(data.title)
@@ -45,11 +52,13 @@ export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (i
 
     const handleItemClick = () => {
         setActiveItemId(data.conversation_id)
+        if (isMobile) {
+            setMobileSideBar(false)
+        }
     };
 
     const handleOnClickRename = () => {
         setIsEditing(true)
-        setOpenPopup(false)
     }
 
     const handleOnBlurRename = (e: ChangeEvent<HTMLInputElement>) => {
@@ -182,15 +191,35 @@ export function HistoryGroup({ chatList, onDelete, title, }: {
 
 export function UsedAsstGPTs() {
     const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed)
+    const setMobileSideBar = useSetRecoilState(mobileDrawerState)
+    const isMobile = useMediaQuery('(max-width: 768px)')
+
+    const handleClick = () => {
+        if (isMobile) {
+            setMobileSideBar(false)
+        }
+    }
+
     if (asstListApi.loading) {
         return null
     }
+
     return (
         <div>
+            <Link href='/' onClick={handleClick}>
+                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
+                    <div className='h-6 w-6 flex-shrink-0'>
+                        <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full flex items-center justify-center'>
+                            <ChatGptLogo />
+                        </div>
+                    </div>
+                    <span className='text-sm'>ChatGpt</span>
+                </button>
+            </Link>
             {
                 asstListApi.data?.map((item) => {
                     return (
-                        <Link href={`/gpts/${item.id}`}>
+                        <Link href={`/gpts/${item.id}`} onClick={handleClick}>
                             <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
                                 <div className='h-6 w-6 flex-shrink-0'>
                                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
@@ -203,18 +232,22 @@ export function UsedAsstGPTs() {
                     )
                 })
             }
-            <Link href='/gpts'>
+            <Link href='/gpts' onClick={handleClick}>
                 <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
-                    <div className='flex items-center justify-center text-token-text-secondary h-7 w-7'>
-                        <IconGptsLogo />
+                    <div className='h-6 w-6 flex-shrink-0'>
+                        <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full flex items-center justify-center'>
+                            <IconGptsLogo />
+                        </div>
                     </div>
                     <span className='text-sm'>探索 GPT</span>
                 </button>
             </Link>
-            <Link href='/gc'>
+            <Link href='/gc' onClick={handleClick}>
                 <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
-                    <div className='flex items-center justify-center text-token-text-secondary h-7 w-7'>
-                        <IconGptsLogo />
+                    <div className='h-6 w-6 flex-shrink-0'>
+                        <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full flex items-center justify-center'>
+                            <IconGptsLogo />
+                        </div>
                     </div>
                     <span className='text-sm'>图片助手</span>
                 </button>

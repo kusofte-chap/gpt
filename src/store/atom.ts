@@ -35,3 +35,13 @@ export const newConversationState = atom({
     key: 'gpt-new-conversation-key',
     default: null as any
 })
+
+export const sideBarState = atom({
+    key: 'gpt-side-bar-key',
+    default: true
+})
+
+export const mobileDrawerState = atom({
+    key: 'gpt-mobile-drawer-key',
+    default: false
+})

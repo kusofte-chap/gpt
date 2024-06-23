@@ -1,8 +1,6 @@
 import React, { createRef, useContext, useEffect, useMemo, useRef } from 'react';
 import { HistoryGroup, UsedAsstGPTs } from './components';
 import Footer from './footer';
-import Link from 'next/link';
-import LogoSvg from '@/assets/logo.svg'
 import EditIcon from '@/assets/icons/icon-edit.svg'
 import { IHistoryItem } from '@/interface/history';
 import { useInfiniteScroll, useRequest } from 'ahooks';
@@ -10,12 +8,16 @@ import { deleteConversation, getHistoryList } from '@/api/gpt';
 import moment from 'moment';
 import _groupBy from 'lodash/groupBy'
 import toast from '@/until/message';
-import { useRecoilValue } from 'recoil';
-import { newConversationState } from '@/store/atom';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { mobileDrawerState, newConversationState } from '@/store/atom';
 import { PopoverContext, PopoverProvider } from './context';
 import Spinning from '../Spinning';
 import cn from 'classnames'
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
+import StyledTooltip from '../StyledTooltip';
+import { useToggleSideBar } from '@/hooks/index';
+import { useMediaQuery } from '@mui/material';
 
 interface Result {
     list: IHistoryItem[];
@@ -64,10 +66,15 @@ async function getLoadMoreList(nextPage: number = 0): Promise<Result> {
 }
 
 function SideBarContent() {
-    const newConversation = useRecoilValue(newConversationState)
-    const { setActiveItemId } = useContext(PopoverContext)
+    const router = useRouter()
     const params = useParams()
+    const isMobile = useMediaQuery('(max-width: 768px)');
+    const setMobileSideBar = useSetRecoilState(mobileDrawerState)
+    const newConversation = useRecoilValue(newConversationState)
     const scrollRef = useRef<HTMLDivElement>(null)
+
+    const { setActiveItemId } = useContext(PopoverContext)
+    const { toggleCloseSideBar } = useToggleSideBar()
 
     const { data, loading, loadingMore, mutate } = useInfiniteScroll(
         (d) => getLoadMoreList(d?.number),
@@ -89,6 +96,9 @@ function SideBarContent() {
                 const index = data.list.findIndex((item) => item.conversation_id === id);
                 data?.list.splice(index, 1);
                 mutate({ ...data });
+                if (location.pathname !== '/') {
+                    router.push('/')
+                }
             }
         },
         onError: (error: any) => {
@@ -128,25 +138,29 @@ function SideBarContent() {
                 <div className="flex flex-col h-full min-h-0">
                     <nav className='flex w-full h-full flex-col px-3 pb-3.5'>
                         <div className='flex-1 flex flex-col transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto' ref={scrollRef}>
-                            <div className='sticky z-20 left-0 top-0 right-0 bg-[#f9f9f9] pt-3.5'>
+                            <div className='sticky z-20 left-0 top-0 right-0 bg-[#f9f9f9]'>
                                 <div className='pb-0.5 last:pb-0'>
-                                    <Link
-                                        href='/'
-                                        type='button'
-                                        className='group flex h-10 items-center gap-2 rounded-lg bg-[#f9f9f9] hover:bg-[#ececec] px-2 font-medium cursor-pointer'
-                                    >
-                                        <div className='w-7 h-7 flex-shrink-0 rounded-full bg-white border border-token-border-light'>
-                                            <div className='h-full  flex items-center justify-center position-relative'>
-                                                <LogoSvg className='w-2/3 h-2/3' />
-                                            </div>
-                                        </div>
-                                        <div className='grow overflow-hidden text-ellipsis whitespace-nowrap text-sm text-token-text-primary'>
-                                            新聊天
-                                        </div>
-                                        <button className='flex flex-shrink-0 items-center justify-center w-5 h-5 border-none bg-transparent outline-none text-token-text-primary'>
-                                            <EditIcon />
-                                        </button>
-                                    </Link >
+                                    <div className='flex justify-between h-14 items-center'>
+                                        <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
+                                            <button
+                                                onClick={toggleCloseSideBar}
+                                                className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary'>
+                                                <IconCloseMenu />
+                                            </button>
+                                        </StyledTooltip>
+                                        <StyledTooltip title='新聊天' placement='bottom' arrow>
+                                            <button
+                                                onClick={() => {
+                                                    if (isMobile) {
+                                                        setMobileSideBar(false)
+                                                    }
+                                                    router.push('/')
+                                                }}
+                                                className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary'>
+                                                <EditIcon />
+                                            </button>
+                                        </StyledTooltip>
+                                    </div >
                                 </div>
                             </div>
                             <div>
@@ -173,8 +187,8 @@ function SideBarContent() {
                         <Footer />
                     </nav>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
 

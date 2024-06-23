@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import LeftSideBar from '@/component/SideBar'
 import { ModelSelect } from '@/component/PageHeader'
 import { useMediaQuery } from '@mui/material'
@@ -10,10 +10,30 @@ import { RecoilRoot } from 'recoil'
 import Updated from '@/component/Updated'
 import { SnackbarProvider } from 'notistack';
 import MobileIconMenu from '@/component/ Drawer'
-import { CHAT_MODEL_CONVERTER } from '@/interface/common'
+import { CHAT_MODEL_CONVERTER, IMAGE_MODE_CONVERTER } from '@/interface/common'
+import { usePathname } from 'next/navigation'
 
 export default function PageLayout({ children }: { children: React.ReactNode }) {
-    const isDesktop = useMediaQuery('(min-width: 768px)');
+    const asPathName = usePathname()
+
+    const modelMenuList = useMemo(() => {
+        if (asPathName.startsWith('/chat')) {
+            return CHAT_MODEL_CONVERTER
+        }
+        if (asPathName === '/gc') {
+            return IMAGE_MODE_CONVERTER
+        }
+        return []
+    }, [asPathName])
+
+    const isGpts = useMemo(() => {
+        if (asPathName.startsWith('/gpts')) {
+            return true
+        }
+        return false
+    }, [asPathName])
+
+
     return (
         <RecoilRoot>
             <Updated />
@@ -24,12 +44,12 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
                 <div className='relative flex-1 flex flex-col h-full max-w-full overflow-hidden'>
                     <div className='w-full min-h-[40px] sticky top-0 left-0 flex items-center justify-center border-b border-token-border-medium md:hidden'>
                         <MobileIconMenu />
-                        <ModelSelect modeList={CHAT_MODEL_CONVERTER} />
-                        <button className='absolute bottom-0 right-0 top-0 flex items-center'>
+                        {modelMenuList.length > 0 && <ModelSelect modeList={modelMenuList} />}
+                        {!isGpts && <button className='absolute bottom-0 right-0 top-0 flex items-center'>
                             <span className='px-3'>
                                 <IconEdit />
                             </span>
-                        </button>
+                        </button>}
                     </div>
                     <main className='relative h-full w-full flex-1 overflow-auto transition-width'>
                         {children}

@@ -1,73 +1,36 @@
 'use client'
-import ScrollToBottom, { useScrollToBottom, useSticky } from 'react-scroll-to-bottom'
-import React, { Fragment, useEffect, useRef, useState } from 'react'
-import { useRecoilValue } from 'recoil';
+
+import React, { useEffect, useRef, useState } from 'react'
 import { useRequest } from 'ahooks';
 import { getImageList, getOriginUrl } from '@/api/gc';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import { Skeleton, useMediaQuery } from '@mui/material';
 import PageHeader from '@/component/PageHeader';
 import GlobalInputForm from '@/component/Footer';
-import { currentChatModelState } from '@/store/atom';
 import { CHAT_MODEL, IMAGE_MODE_CONVERTER } from '@/interface/common';
 import { generateImage } from '@/api/gpt';
 import { IImageItem } from '@/interface/chat';
 import toast from '@/until/message';
-import { css } from '@emotion/css'
 import 'photoswipe/style.css';
-
-const scrollBottomRoot = css({
-    width: '100%',
-    height: '100%',
-    '&>div': {
-        width: '100%',
-        height: '100%',
-        overflowY: 'auto'
-    }
-})
+import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
+import Spinning from '@/component/Spinning';
 
 const LoadingSkeleton = () => {
     return (
-        <>
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-            <Skeleton variant="rounded" width="100%" height="200px" />
-        </>
+        <div className='w-full v-h-full min-h-[50vh] flex items-center justify-center'>
+            <Spinning />
+        </div>
     )
 }
-
 
 const CreatingSkeleton = ({ isCreating }: { isCreating: boolean }) => {
     if (!isCreating) {
         return
     }
     return (
-        <div className='w-full h-[200px] rounded-lg'>
-            <Skeleton variant="rectangular" width="100%" height='100%' className='rounded-lg'
-                sx={{
-                    '&.MuiSkeleton-root>*': {
-                        visibility: 'visible',
-                    }
-                }}>
-                <div className='w-full h-[200px] flex items-center justify-center text-[18px] font-thin text-[#000]'>生成中...</div>
-            </Skeleton>
+        <div className='w-full h-[200px] rounded-lg border bg-white flex items-center justify-center '>
+            <Spinning />
         </div>
     )
-}
-
-
-function getDownLoadUrl(url: string) {
-    const urlObject = new URL(url)
-    return `${urlObject.origin}${urlObject.pathname}?attname=&${urlObject.searchParams.toString()}`
 }
 
 function MediaImage({ data }: { data: IImageItem }) {
@@ -195,30 +158,24 @@ export default function AiGcWindow() {
     return (
         <div className='flex h-full flex-col focus-visible:outline-0'>
             <div className='flex-1 overflow-hidden'>
-                <ScrollToBottom
-                    className={scrollBottomRoot}
-                    initialScrollBehavior='smooth'
-                >
+                <ScrollBottomWrapper>
                     <div className='flex flex-col text-sm pb-9'>
                         <div className='hidden md:block md:shadow-3xl-btr' >
                             <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
                         </div>
                         <div className='w-full py-0 px-3 text-base m-auto md:py-5 md:px-5 lg:px-1 xl:px-5'>
+                            {imageListApi.loading && <LoadingSkeleton />}
                             <div id='gallery-started' className="w-full pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem] m-auto">
                                 <CreatingSkeleton isCreating={isCreating} />
-                                {
-                                    imageListApi.loading ? <LoadingSkeleton /> : <Fragment>
-                                        {imageList.map((item, index) => (
-                                            <MediaImage key={index} data={item} />
-                                        ))
-                                        }
-                                    </Fragment>
+                                {imageList.map((item, index) => (
+                                    <MediaImage key={index} data={item} />
+                                ))
                                 }
                             </div>
                         </div>
 
                     </div>
-                </ScrollToBottom>
+                </ScrollBottomWrapper>
             </div>
             {
                 !imageListApi.loading && imageList.length === 0 && <div className='w-full h-[200px] flex-shrink-0 text-center text-lg  text-black/50 font-light flex justify-center'>

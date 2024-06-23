@@ -2,7 +2,7 @@
 
 import React, { Fragment, useEffect, useRef, useState } from 'react'
 import { faker } from '@faker-js/faker';
-import { useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
 import moment from 'moment';
 import mdParser from '@/until/mdit';
 import PageHeader from '@/component/PageHeader';
@@ -13,7 +13,7 @@ import { CHAT_ROLE, IStreamItem, MESSAGE_TYPE } from '@/interface/chat';
 import { useMediaQuery } from '@mui/material';
 import { CHAT_MODEL_CONVERTER } from '@/interface/common';
 import Welcome from '@/component/Welcome';
-import { newConversationState } from '@/store/atom';
+import { newConversationState, userInfoState } from '@/store/atom';
 import { FatalError, RetriableError } from '@/api/request';
 import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
 import HistoryRecordChat from '@/component/HistoryRecordChat';
@@ -24,7 +24,6 @@ interface IContentProps {
 }
 
 export default function ChatGptWindow({ conversationId, isNewChat }: IContentProps) {
-    const isDesktop = useMediaQuery('(min-width: 768px)');
     const [chatList, setChatList] = useState<any[]>([])
     const [isDirty, setIsDirty] = useState(false)
     const [startWrite, setStartWrite] = useState(false)
@@ -38,6 +37,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     const currentChatIndex = useRef(0)
     const hstRecordLength = useRef(0)
 
+    const userInfo = useRecoilValue(userInfoState)
     const setNewConversation = useSetRecoilState(newConversationState)
 
     const typingTimer = useRef<any>()
@@ -227,18 +227,26 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
 
     return (
         <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
+            <div className='hidden md:block'>
+                <PageHeader modeList={CHAT_MODEL_CONVERTER} />
+            </div>
             {
                 isNewChat && !isDirty ? <Welcome /> : <div className='flex-1 overflow-hidden'>
                     <ScrollBottomWrapper >
                         <div className='flex flex-col text-sm pb-9'>
-                            {isDesktop && <PageHeader modeList={CHAT_MODEL_CONVERTER} />}
                             {!isNewChat && <HistoryRecordChat conversationId={conversationId as string} getRecordLength={getRecordLength} />}
                             {
                                 chatList.map((item, index) => {
                                     const numId = hstRecordLength.current + index * 2 + 1
                                     return (
                                         <Fragment key={numId}>
-                                            <SelfChatItem content={item.content} index={numId} id={item.id} chatId={item.conversationId} />
+                                            <SelfChatItem
+                                                content={item.content}
+                                                index={numId}
+                                                id={item.id}
+                                                chatId={item.conversationId}
+                                                avatar={userInfo?.user?.avatarUrl}
+                                            />
                                             <GptChatItem index={numId + 1} chatId={item.conversationId} />
                                         </Fragment>
                                     )
