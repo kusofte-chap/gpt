@@ -271,7 +271,7 @@ export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGpt
         setIsStreaming(true)
         preRenderRole(inputPrompt.trim())
 
-        fetchEventSource(`http://93.127.216.22:8089/api/conversation`, {
+        fetchEventSource(`/backend/api/conversation`, {
             method: "POST",
             signal: ctrRef.current?.signal,
             headers: {

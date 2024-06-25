@@ -1,10 +1,10 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import qs from "qs";
 import { handleLogout } from "../until";
-// http://47.89.155.63:8089/api/prompt_library
-// `http://93.127.216.22:8089`
+
 const request = axios.create({
-    baseURL: `http://93.127.216.22:8089`
+    // baseURL: `http://93.127.216.22:8089`
+    baseURL: `/backend`
 });
 
 // 请求拦截器
