@@ -35,7 +35,6 @@ const CreatingSkeleton = ({ isCreating }: { isCreating: boolean }) => {
 
 function MediaImage({ data }: { data: IImageItem }) {
     const [originalUrl, setOriginalUrl] = useState('')
-
     const pollingApi = useRequest(getOriginUrl, {
         manual: true,
         pollingInterval: 1000,
@@ -64,16 +63,15 @@ function MediaImage({ data }: { data: IImageItem }) {
             data-pswp-src={data.originalUrl}
             data-pswp-width="1024"
             data-pswp-height="1024"
-            className='relative group rounded-lg bg-[#0000001c] overflow-hidden'
+            className='relative group rounded-lg overflow-hidden w-[calc(50%-10px)] pt-[calc(50%-10px)] md:w-[calc(25%-7.5px)] md:pt-[calc(25%-7.5px)] aspect-square'
             key={data.createTime}
-
         >
-            <div className='absolute w-full h-[40px] bottom-0 left-0 p-2 translate-y-[40px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
+            <div className='absolute z-20 w-full h-[40px] bottom-0 left-0 p-2 translate-y-[40px] transition duration-300 bg-black/60 group-hover:translate-y-0 '>
                 <p className='text-sm w-full text-white font-light break-word leading-5 truncate'>
-                    {`Prompt: ${data.prompt}`}
+                    {data.prompt}
                 </p>
             </div>
-            <img className='w-full h-[200px] object-cover object-center ' src={data.thumbUrl} alt={data.prompt} />
+            <img className='absolute z-10 top-0 left-0 w-full h-full object-cover object-center aspect-square' src={data.thumbUrl} alt={data.prompt} />
         </a>
     )
 }
@@ -82,7 +80,7 @@ export default function AiGcWindow() {
     const ctrRef = useRef<AbortController | null>(null)
     const [isCreating, setIsCreating] = useState(false)
     const [imageList, setImageList] = useState<IImageItem[]>([])
-    const [model, setModel] = useState(CHAT_MODEL.DALL_E_3)
+    // const [model, setModel] = useState(CHAT_MODEL.DALL_E_3)
 
     const currentPage = useRef(1)
     const totalPages = useRef(-1)
@@ -97,7 +95,7 @@ export default function AiGcWindow() {
 
     const onSend = (inputPrompt: string) => {
         setIsCreating(true)
-        generateImage({ prompt: inputPrompt, model }).then(rst => {
+        generateImage({ prompt: inputPrompt, model: CHAT_MODEL.DALL_E_3 }).then(rst => {
             if (rst) {
                 setImageList((prev => ([rst, ...prev])))
             } else {
@@ -160,13 +158,13 @@ export default function AiGcWindow() {
             <div className='flex-1 overflow-hidden'>
                 <ScrollBottomWrapper>
                     <div className='flex flex-col text-sm pb-9'>
-                        <div className='hidden md:block md:shadow-3xl-btr' >
+                        {/* <div className='hidden md:block md:shadow-3xl-btr' >
                             <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
-                        </div>
+                        </div> */}
                         <div className='w-full py-0 px-3 text-base m-auto pt-4 md:py-5 md:px-5 lg:px-1 xl:px-5'>
                             {imageListApi.loading && <LoadingSkeleton />}
-                            <div id='gallery-started' className="w-full pswp-gallery grid grid-cols-2 md:grid-cols-4 gap-5 md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem] m-auto">
-                                <CreatingSkeleton isCreating={isCreating} />
+                            <div id='gallery-started' className="flex flex-wrap justify-between md:justify-start gap-[10px] w-full pswp-gallery md:max-w-[48rem] m-auto">
+                                {/* <CreatingSkeleton isCreating={isCreating} /> */}
                                 {imageList.map((item, index) => (
                                     <MediaImage key={index} data={item} />
                                 ))
@@ -186,7 +184,7 @@ export default function AiGcWindow() {
                 onSend={onSend}
                 onStop={onStop}
                 displayPrompts={false}
-                placeHolder="巴洛克式绘画"
+                placeHolder=""
                 isStreaming={isCreating}
             />
         </div>

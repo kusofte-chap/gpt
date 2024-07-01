@@ -162,7 +162,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
         setIsStreaming(true)
         preRenderRole(inputPrompt.trim())
 
-        fetchEventSource(`/backend/api/conversation`, {
+        fetchEventSource(process.env.NEXT_PUBLIC_API_CHAT_URL as string, {
             method: "POST",
             signal: ctrRef.current.signal,
             headers: {

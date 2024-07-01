@@ -10,7 +10,7 @@ export default function Login() {
             <div className='flex items-center justify-center'>
                 <LogoXl className='w-16 h-[128px]' />
             </div>
-            <section className='w-full md:max-w-[420px] flex flex-col py-16'>
+            <section className='w-full md:max-w-[320px] flex flex-col py-16'>
                 <div className='pt-10 px-5 pb-6 box-content'>
                     <Typography component='h3' fontSize='32px' color='#2d333a' textAlign='center'>欢迎回来</Typography>
                 </div>

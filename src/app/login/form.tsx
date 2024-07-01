@@ -1,7 +1,7 @@
 'use client'
 
 import { Checkbox, FormControlLabel, FormHelperText, IconButton, InputAdornment, Skeleton, TextField } from '@mui/material'
-import React, { useState } from 'react'
+import React, { Fragment, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -10,9 +10,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { getCodeAndUid, login } from '@/api/auth';
 import encrypt from '@/until/encrypt';
 import { useRouter } from 'next/navigation'
-import toast from '@/until/message';
 import CachedIcon from '@mui/icons-material/Cached';
-import { AxiosError } from 'axios';
+import IconSpinning from '@/assets/icons/spinning.svg';
 
 interface IFormValues {
     username: string
@@ -45,6 +44,7 @@ export default function LoginForm() {
     const router = useRouter()
     const [showPassword, setShowPassword] = useState(false)
     const [loginError, setLoginError] = useState<string>('')
+    const [loading, setLoading] = useState<boolean>(false)
 
     const { control, handleSubmit } = useForm<IFormValues>({
         defaultValues: DEFAULT_VALUES
@@ -54,15 +54,17 @@ export default function LoginForm() {
 
     const loginApi = useRequest(login, {
         manual: true,
+        onBefore: () => {
+            setLoading(true)
+        },
         onSuccess: (rst: any) => {
             if (rst) {
                 rst.token && localStorage.setItem('gpt_token', rst.token.replace('Bearer ', '').trim())
-                setTimeout(() => {
-                    router.push('/')
-                }, 0)
+                router.push('/')
             }
         },
         onError: (error: any) => {
+            setLoading(false)
             setLoginError(error?.response?.data?.message || "登陆失败")
         }
     })
@@ -83,7 +85,7 @@ export default function LoginForm() {
 
     return (
         <ThemeProvider theme={customTheme}>
-            <form className='w-full px-4 md:max-w-[30rem] md:mx-auto md:px-0'>
+            <form className='w-full px-6 md:max-w-[320px] md:mx-auto md:px-0'>
                 <div className='w-full mb-4'>
                     <Controller
                         name='username'
@@ -123,8 +125,8 @@ export default function LoginForm() {
                                 fullWidth
                                 error={invalid}
                                 helperText={error?.message}
-                                placeholder='請輸入密碼'
-                                label='密碼'
+                                placeholder='請輸入密码'
+                                label='密码'
                                 autoComplete='off'
                                 sx={{
                                     '.MuiFormHelperText-root': {
@@ -181,8 +183,6 @@ export default function LoginForm() {
                                     animation='wave'
                                     width='100%'
                                     height={52}
-                                // sx={{ bgcolor: 'rgba(0,0,0,0.05' }}
-
                                 /> : <img
                                     className='block w-full h-[52px] user-drag-none select-none drag-none object-scale-down object-center outline-0 border-0 border-[transparent] text-opacity-0'
                                     src={codeApi.data?.img}
@@ -226,11 +226,16 @@ export default function LoginForm() {
                 </div>
                 <div className='w-full mb-4'>
                     <button
-                        className='w-full h-[52px] bg-[#10a37f] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-[inset_0_0_0_150px_#0000001a]'
+                        className='flex items-center justify-center gap-2 disabled:opacity-50 w-full h-[52px] bg-[#10a37f] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-[inset_0_0_0_150px_#0000001a]'
                         onClick={onLogin}
-                        disabled={loginApi.loading}
+                        disabled={loading}
                     >
-                        {loginApi.loading ? '登陆...' : '登陆'}
+                        {
+                            loading ? <Fragment>
+                                <IconSpinning />
+                                登录...
+                            </Fragment> : '登录'
+                        }
                     </button>
                 </div>
                 {

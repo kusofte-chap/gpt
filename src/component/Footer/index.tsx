@@ -104,10 +104,11 @@ export default function GlobalInputForm(props: IGlobalInputForm) {
     onSend,
     onStop,
     isStreaming,
-    placeHolder,
+    placeHolder = '给“ChatGPT”发送消息',
     hiddenFileUpload = false,
     hiddenGptTip = false,
     displayPrompts = true,
+
     containerClass = 'md:max-w-3xl lg:max-w-[40rem] xl:max-w-[48rem]'
   } = props
 
@@ -158,7 +159,7 @@ export default function GlobalInputForm(props: IGlobalInputForm) {
                   maxLength={2000}
                   ref={inputRef as any}
                   className='m-0 w-full h-[44px] md:h-[52px] resize-none border-0 bg-transparent focus:ring-0 focus-visible:ring-0 dark:bg-transparent py-[10px] pr-10 md:py-3.5 md:pr-12  max-h-52 placeholder-black/50  pl-10 md:pl-[55px]'
-                  placeholder={placeHolder || '给“ChatGPT”发送消息'}
+                  placeholder={placeHolder}
                   onChange={(e) => {
                     setInputPrompt(e.target.value.slice(0, 2000))
                   }}

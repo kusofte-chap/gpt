@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Fragment, useEffect, useRef, useState } from 'react'
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useRequest } from 'ahooks';
 import moment from 'moment';
 import cn from 'classnames'
@@ -23,11 +23,37 @@ import HistoryRecordChat from '@/component/HistoryRecordChat';
 import StyledTooltip from '@/component/StyledTooltip';
 import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
 import { useToggleSideBar } from '@/hooks/index';
-import { useMediaQuery } from '@mui/material';
+import { Menu, MenuItem, useMediaQuery } from '@mui/material';
+import IconEdit from '@/assets/icons/icon-edit.svg'
+import IconInfo from '@/assets/icons/icon-info.svg'
+import IconHide from '@/assets/icons/icon-hide.svg'
 
-export function AsstPageHeader({ id, asstName }: { id: string, asstName: string }) {
-    const { openSidebar, toggleCloseSideBar } = useToggleSideBar()
+export function AsstPageHeader({ asstName }: { asstName: string }) {
     const isDesktop = useMediaQuery('(min-width: 768px)')
+    const { openSidebar, toggleCloseSideBar } = useToggleSideBar()
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    const open = Boolean(anchorEl);
+
+    const placement = useMemo(() => {
+        if (isDesktop) {
+            return {
+                transformOrigin: { horizontal: 'left', vertical: 'top' },
+                anchorOrigin: { horizontal: 'left', vertical: 'bottom' }
+            }
+        }
+        return {
+            transformOrigin: { horizontal: 'center', vertical: 'top' },
+            anchorOrigin: { horizontal: 'center', vertical: 'bottom' }
+        }
+    }, [isDesktop])
 
     return (
         <div className='sticky top-0 mb-1.5 flex items-center gap-2 z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
@@ -41,20 +67,76 @@ export function AsstPageHeader({ id, asstName }: { id: string, asstName: string 
                 </StyledTooltip>
             </div>}
             <div className='flex items-center gap-2 overflow-hidden'>
-                <button className='group flex cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary text-token-text-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
-                    {asstName}
+                <button
+                    onClick={handleClick}
+                    aria-controls={open ? 'gpt-modal-select-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? 'true' : undefined}
+                    className='group flex cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary text-token-text-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
+                    {`${asstName}`}
                     <IconMenuDown />
                 </button>
             </div>
-            {/* <div className='flex gap-2 pr-1'>
-                <button className='flex h-10 w-10 items-center justify-center rounded-full hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary focus-visible:outline-0'>
-                    <div className='flex items-center justify-center overflow-hidden rounded-full'>
-                        <div className='relative flex'>
-                            <img alt="User" loading="lazy" className="object-cover object-center rounded-sm w-8 h-8" src={userInfo?.user?.avatarUrl} />
+            <Menu
+                anchorEl={anchorEl}
+                id="gpt-modal-select-menu"
+                open={open}
+                onClose={handleClose}
+                onClick={handleClose}
+                slotProps={{
+                    paper: {
+                        elevation: 0,
+                        sx: {
+                            p: 0,
+                            width: 138,
+                            mt: '4px',
+                            py: 1,
+                            borderRadius: '8px',
+                            border: '1px solid #e0e0e0',
+                            overflow: 'visible',
+                            boxShadow: '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)'
+                        },
+                    },
+                }}
+                MenuListProps={{
+                    sx: {
+                        p: 0,
+                        '.MuiMenuItem-root': {
+                            p: 0,
+                            bgcolor: 'transparent',
+                            ':hover': {
+                                bgcolor: 'unset'
+                            }
+                        }
+                    }
+                }}
+                {...placement as any}
+            >
+                <MenuItem >
+                    <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                        <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                            <IconEdit />
                         </div>
+                        新聊天
                     </div>
-                </button> */}
-            {/* </div> */}
+                </MenuItem>
+                <MenuItem >
+                    <div className='flex-1 flex gap-2.5 items-center   mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                        <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                            <IconInfo />
+                        </div>
+                        关于
+                    </div>
+                </MenuItem>
+                <MenuItem >
+                    <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                        <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                            <IconHide />
+                        </div>
+                        从边栏隐藏
+                    </div>
+                </MenuItem>
+            </Menu>
         </div >
     )
 }
@@ -62,15 +144,15 @@ export function AsstPageHeader({ id, asstName }: { id: string, asstName: string 
 function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPrompt: (prompt: string) => void }) {
     return (
         <div className='relative h-full'>
-            <AsstPageHeader id='asst_CGNeqJSMpeLm1vum47MFzVVL' asstName={data?.name} />
-            <div className='flex h-full flex-col items-center justify-center text-token-text-primary'>
+            <AsstPageHeader asstName={data?.name} />
+            <div className='flex h-full flex-col items-center justify-center text-[rgba(103,103,103)]'>
                 <div className='mb-3 h-20 w-20'>
                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
                         <img src={data?.profile_picture_path} alt={data?.name} className='h-full w-full bg-token-main-surface-secondary' width={80} height={80} />
                     </div>
                 </div>
                 <div className='flex flex-col items-center gap-2'>
-                    <div className='text-center text-2xl font-semibold'>{data?.name}</div>
+                    <div className='text-center text-2xl font-semibold text-[#0d0d0d]'>{data?.name}</div>
                     <div className='text-sm text-token-text-tertiary'>{`创建者：${data?.author.name}`}</div>
                     <div className='max-w-md text-center text-sm font-normal text-token-text-primary'>
                         {data?.description}
@@ -84,7 +166,7 @@ function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPro
                                     <button
                                         onClick={() => onClickPrompt(prompt)}
                                         className='relative flex w-40 flex-col gap-2 rounded-2xl border border-token-border-light px-3 pb-4 pt-3 text-start align-top text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition hover:bg-token-main-surface-secondary' key={prompt}>
-                                        <div className='line-clamp-3 text-balance text-gray-600 dark:text-gray-500 break-word'>{prompt}</div>
+                                        <div className='line-clamp-3 text-balance text-[rgba(103,103,103)] break-word'>{prompt}</div>
                                     </button>
                                 )
                             })
@@ -97,7 +179,7 @@ function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPro
                                     <button
                                         onClick={() => onClickPrompt(prompt)}
                                         className='relative flex w-40 flex-col gap-2 rounded-2xl border border-token-border-light px-3 pb-4 pt-3 text-start align-top text-[15px] shadow-[0_0_2px_0_rgba(0,0,0,0.05),0_4px_6px_0_rgba(0,0,0,0.02)] transition hover:bg-token-main-surface-secondary' key={prompt}>
-                                        <div className='line-clamp-3 text-balance text-gray-600 dark:text-gray-500 break-word'>{prompt}</div>
+                                        <div className='line-clamp-3 text-balance text-[rgba(103,103,103)] break-word'>{prompt}</div>
                                     </button>
                                 )
                             })
@@ -271,7 +353,7 @@ export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGpt
         setIsStreaming(true)
         preRenderRole(inputPrompt.trim())
 
-        fetchEventSource(`/backend/api/conversation`, {
+        fetchEventSource(process.env.NEXT_PUBLIC_API_CHAT_URL as string, {
             method: "POST",
             signal: ctrRef.current?.signal,
             headers: {
@@ -351,7 +433,7 @@ export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGpt
                     (isInitGptInfoPage && !isDirty) ? <AsstWelcome data={asstDetail} onClickPrompt={handleClickPrompt} /> :
                         <ScrollBottomWrapper>
                             <div className='flex flex-col text-sm pb-9'>
-                                <AsstPageHeader asstName={asstDetail?.name} id={asstDetail?.id} />
+                                <AsstPageHeader asstName={asstDetail?.name} />
                                 {!isInitGptInfoPage &&
                                     <HistoryRecordChat
                                         asstId={asst_id as string}

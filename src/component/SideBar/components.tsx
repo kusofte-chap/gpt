@@ -13,6 +13,7 @@ import { useRequest } from 'ahooks'
 import { IGroupListItem } from '@/interface/gpts'
 import { asyncGptsUsed } from '@/api/gpts'
 import IconGptsLogo from '@/assets/icons/icon-gpts-logo.svg'
+import AigcLogo from '@/assets/aigc.svg'
 import _groupBy from 'lodash/groupBy'
 import Link from 'next/link'
 import toast from '@/until/message'
@@ -169,7 +170,7 @@ export function HistoryGroup({ chatList, onDelete, title, }: {
         <div className='relative mt-5 empty:mt-0 empty:hidden first:mt-0 last:mb-5'>
             <div className='bg-token-sidebar-surface-primary'>
                 <div className='flex items-center h-9'>
-                    <h3 className='pb-2 pt-3 px-2 text-xs font-medium text-ellipsis overflow-hidden break-all text-token-text-secondary'>{title}</h3>
+                    <h3 className='pb-2 pt-3 px-2 text-xs text-ellipsis overflow-hidden break-all text-token-text-secondary'>{title}</h3>
                 </div>
             </div>
             <TransitionGroup component='ol'>
@@ -207,7 +208,7 @@ export function UsedAsstGPTs() {
     return (
         <div>
             <Link href='/' onClick={handleClick}>
-                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
+                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
                     <div className='h-6 w-6 flex-shrink-0'>
                         <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full flex items-center justify-center'>
                             <ChatGptLogo />
@@ -220,10 +221,10 @@ export function UsedAsstGPTs() {
                 asstListApi.data?.map((item) => {
                     return (
                         <Link href={`/gpts/${item.id}`} onClick={handleClick}>
-                            <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
+                            <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
                                 <div className='h-6 w-6 flex-shrink-0'>
-                                    <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
-                                        <img src={item?.profile_picture_path} alt={item?.name} className='h-full w-full' width={80} height={80} />
+                                    <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full'>
+                                        <img src={item?.profile_picture_path} alt={item?.name} className='h-full w-full object-contain object-center' width={80} height={80} />
                                     </div>
                                 </div>
                                 <span className='text-sm truncate'>{item?.name || item.description}</span>
@@ -233,7 +234,7 @@ export function UsedAsstGPTs() {
                 })
             }
             <Link href='/gpts' onClick={handleClick}>
-                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
+                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
                     <div className='h-6 w-6 flex-shrink-0'>
                         <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full flex items-center justify-center'>
                             <IconGptsLogo />
@@ -243,10 +244,10 @@ export function UsedAsstGPTs() {
                 </button>
             </Link>
             <Link href='/gc' onClick={handleClick}>
-                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 font-medium text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
+                <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
                     <div className='h-6 w-6 flex-shrink-0'>
                         <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full flex items-center justify-center'>
-                            <IconGptsLogo />
+                            <AigcLogo />
                         </div>
                     </div>
                     <span className='text-sm'>图片助手</span>

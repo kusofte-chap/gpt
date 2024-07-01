@@ -4,7 +4,7 @@ import { handleLogout } from "../until";
 
 const request = axios.create({
     // baseURL: `http://93.127.216.22:8089`
-    baseURL: `/backend`
+    baseURL: process.env.NEXT_PUBLIC_API_URL
 });
 
 // 请求拦截器

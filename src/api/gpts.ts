@@ -22,5 +22,5 @@ export const asyncGetGptsInfo = (asstId:string)=>{
 
 // 获取已使用的gpts助手
 export const asyncGptsUsed = ()=>{
-    return request.get(`/api/assistans/bootstrap`,{params:{limit:3}}) as any
+    return request.get(`/api/assistans/bootstrap`,{params:{limit:2}}) as any
 }

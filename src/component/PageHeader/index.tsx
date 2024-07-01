@@ -70,7 +70,7 @@ export function ModelSelect({
                     'bg-token-main-surface-secondary': open
                 })}
             >
-                ChatGPT
+                {model}
                 <IconMenu />
             </button>
             <Menu

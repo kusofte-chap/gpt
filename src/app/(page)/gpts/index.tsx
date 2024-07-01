@@ -93,7 +93,11 @@ function GptModelGroup({ id, info, data, onClickRole }: {
                     list.length === 0 ? <NoDataTemplate /> : <div className='grid grid-cols-1 gap-x-1.5 gap-y-1 md:gap-x-2 md:gap-y-1.5 lg:grid-cols-2 lg:gap-x-3 lg:gap-y-2.5'>
                         {
                             list?.map((item, index) => (
-                                <a key={item.id} type='button' onClick={() => onClickRole(item)} className='gizmo-link cursor-pointer group flex h-[104px] items-center gap-2.5 overflow-hidden rounded-xl px-1 py-4 hover:bg-token-main-surface-secondary md:px-3 md:py-4 lg:px-3'>
+                                <a
+                                    key={item.id}
+                                    type='button'
+                                    onClick={() => onClickRole(item)}
+                                    className='gizmo-link cursor-pointer group flex h-[104px] items-center gap-2.5 overflow-hidden rounded-xl px-1 py-4 hover:bg-token-main-surface-secondary md:px-3 md:py-4 lg:px-3'>
                                     <div className='text-md flex w-8 shrink-0 items-center justify-center font-semibold'>{index + 1}</div>
                                     <div className='flex w-full flex-grow items-center gap-4 overflow-hidden'>
                                         <div className='h-12 w-12 flex-shrink-0'>

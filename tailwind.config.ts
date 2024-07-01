@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'token-text-primary': '#0d0d0d',
+        'token-text-primary': 'rgba(13, 13, 13, 0.68)',
         'token-text-secondary': '#9d9d9d',
         'token-text-tertiary': '#b4b4b4',
         'token-sidebar-surface-primary': '#f9f9f9',
