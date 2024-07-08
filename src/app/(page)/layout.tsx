@@ -3,14 +3,12 @@
 import React, { useMemo } from 'react'
 import LeftSideBar from '@/component/SideBar'
 import { ModelSelect } from '@/component/PageHeader'
-import { useMediaQuery } from '@mui/material'
-
 import IconEdit from '@/assets/icons/icon-edit.svg'
 import { RecoilRoot } from 'recoil'
 import Updated from '@/component/Updated'
 import { SnackbarProvider } from 'notistack';
 import MobileIconMenu from '@/component/ Drawer'
-import { CHAT_MODEL_CONVERTER, IMAGE_MODE_CONVERTER } from '@/interface/common'
+import { CHAT_MODEL_CONVERTER } from '@/interface/common'
 import { usePathname } from 'next/navigation'
 
 export default function PageLayout({ children }: { children: React.ReactNode }) {
@@ -21,7 +19,7 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
             return CHAT_MODEL_CONVERTER
         }
         if (asPathName === '/gc') {
-            return IMAGE_MODE_CONVERTER
+            return []
         }
         return []
     }, [asPathName])

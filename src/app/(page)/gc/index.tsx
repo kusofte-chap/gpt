@@ -1,18 +1,17 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
 import { useRequest } from 'ahooks';
+import React, { useEffect, useRef, useState } from 'react'
 import { getImageList, getOriginUrl } from '@/api/gc';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
-import PageHeader from '@/component/PageHeader';
 import GlobalInputForm from '@/component/Footer';
-import { CHAT_MODEL, IMAGE_MODE_CONVERTER } from '@/interface/common';
+import { CHAT_MODEL, IMAGE_MODEL } from '@/interface/common';
 import { generateImage } from '@/api/gpt';
 import { IImageItem } from '@/interface/chat';
-import toast from '@/until/message';
-import 'photoswipe/style.css';
 import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
 import Spinning from '@/component/Spinning';
+import toast from '@/until/message';
+import 'photoswipe/style.css';
 
 const LoadingSkeleton = () => {
     return (
@@ -95,7 +94,7 @@ export default function AiGcWindow() {
 
     const onSend = (inputPrompt: string) => {
         setIsCreating(true)
-        generateImage({ prompt: inputPrompt, model: CHAT_MODEL.DALL_E_3 }).then(rst => {
+        generateImage({ prompt: inputPrompt, model: IMAGE_MODEL.DALL_E_3 }).then(rst => {
             if (rst) {
                 setImageList((prev => ([rst, ...prev])))
             } else {
@@ -158,9 +157,6 @@ export default function AiGcWindow() {
             <div className='flex-1 overflow-hidden'>
                 <ScrollBottomWrapper>
                     <div className='flex flex-col text-sm pb-9'>
-                        {/* <div className='hidden md:block md:shadow-3xl-btr' >
-                            <PageHeader modeList={IMAGE_MODE_CONVERTER} onChangeModel={setModel} />
-                        </div> */}
                         <div className='w-full py-0 px-3 text-base m-auto pt-4 md:py-5 md:px-5 lg:px-1 xl:px-5'>
                             {imageListApi.loading && <LoadingSkeleton />}
                             <div id='gallery-started' className="flex flex-wrap justify-between md:justify-start gap-[10px] w-full pswp-gallery md:max-w-[48rem] m-auto">

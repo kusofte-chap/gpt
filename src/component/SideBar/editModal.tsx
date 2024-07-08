@@ -43,8 +43,8 @@ export default function SettingPanel({ onSetting, onLogout }: {
     return (
         <div className="popover absolute bottom-full left-0 z-20 mb-1 w-full  overflow-hidden rounded-lg border border-token-border-light bg-white p-1.5 shadow-lg outline-none opacity-100 translate-y-0">
             <nav role='none'>
-                <div className="ml-3 mr-2 py-2 text-sm text-token-text-secondary lowercase">ruiyang183@gmail</div>
-                <div className="h-px bg-token-border-light my-1.5" />
+                {/* <div className="ml-3 mr-2 py-2 text-sm text-token-text-secondary lowercase">ruiyang183@gmail</div> */}
+                {/* <div className="h-px bg-token-border-light my-1.5" /> */}
                 <ButtonItem
                     onClick={onSetting}>
                     <IconSetting className="w-[18px] h-[18px]" />
