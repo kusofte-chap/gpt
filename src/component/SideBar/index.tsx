@@ -137,32 +137,32 @@ function SideBarContent() {
             <div className='flex flex-col h-full'>
                 <div className="flex flex-col h-full min-h-0">
                     <nav className='flex w-full h-full flex-col px-3 pb-3.5'>
-                        <div className='flex-1 flex flex-col transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto' ref={scrollRef}>
-                            <div className='sticky z-20 left-0 top-0 right-0 bg-[#f9f9f9]'>
-                                <div className='pb-0.5 last:pb-0'>
-                                    <div className='flex justify-between h-14 items-center'>
-                                        <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
-                                            <button
-                                                onClick={toggleCloseSideBar}
-                                                className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary'>
-                                                <IconCloseMenu />
-                                            </button>
-                                        </StyledTooltip>
-                                        <StyledTooltip title='新聊天' placement='bottom' arrow>
-                                            <button
-                                                onClick={() => {
-                                                    if (isMobile) {
-                                                        setMobileSideBar(false)
-                                                    }
-                                                    router.push('/')
-                                                }}
-                                                className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary'>
-                                                <EditIcon />
-                                            </button>
-                                        </StyledTooltip>
-                                    </div >
-                                </div>
+                        <div className='bg-[#f9f9f9]'>
+                            <div className='pb-0.5 last:pb-0'>
+                                <div className='flex justify-between h-14 items-center'>
+                                    <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
+                                        <button
+                                            onClick={toggleCloseSideBar}
+                                            className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary'>
+                                            <IconCloseMenu />
+                                        </button>
+                                    </StyledTooltip>
+                                    <StyledTooltip title='新聊天' placement='bottom' arrow>
+                                        <button
+                                            onClick={() => {
+                                                if (isMobile) {
+                                                    setMobileSideBar(false)
+                                                }
+                                                router.push('/')
+                                            }}
+                                            className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary'>
+                                            <EditIcon />
+                                        </button>
+                                    </StyledTooltip>
+                                </div >
                             </div>
+                        </div>
+                        <div className='flex-1 flex flex-col transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto' ref={scrollRef}>
                             <div>
                                 <div className='flex flex-col gap-2 pb-2 text-token-text-primary text-sm'>
                                     <UsedAsstGPTs />

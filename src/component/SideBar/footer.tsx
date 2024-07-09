@@ -7,6 +7,7 @@ import { userInfoState } from "@/store/atom"
 import { Avatar, ClickAwayListener, Portal } from "@mui/material"
 import SettingPanel, { EditPersonInfoDialog } from "./editModal"
 import { handleLogout } from "@/until/index"
+import { deepOrange } from "@mui/material/colors"
 
 export default function Footer() {
     const userInfo = useRecoilValue(userInfoState)
@@ -42,7 +43,20 @@ export default function Footer() {
                             onClick={handleIconButton}
                         >
                             <div className='flex-shrink-0 flex items-center justify-center overflow-hidden rounded-full'>
-                                <Avatar src={userInfo.user?.avatarUrl} sx={{ width: 32, height: 32 }} >{userInfo?.user?.username.slice(0, 1)?.toUpperCase()}</Avatar>
+                                <Avatar
+                                    src={userInfo.user?.avatarUrl}
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        bgcolor: deepOrange[500],
+                                        '.MuiAvatar-root': {
+                                            fontSize: '14px'
+                                        }
+                                    }}
+                                    alt={userInfo?.user?.username.slice(0, 2)?.toUpperCase()}
+                                >
+                                    {userInfo?.user?.username.slice(0, 2)?.toUpperCase()}
+                                </Avatar>
                             </div>
                             <div className='relative -top-px grow -space-y-px truncate text-left text-token-text-primary'>
                                 <span>{userInfo?.user?.username || '-'}</span>

@@ -1,16 +1,24 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Menu, MenuItem, useMediaQuery } from '@mui/material';
 import cn from 'classnames'
 import IconMenu from '@/assets/icons/icon-menu.svg'
-import IconGpt from '@/assets/icons/icon-gpt.svg'
-import IconRight from '@/assets/icons/icon-right.svg'
+import IconChecked from '@/assets/icons/icon-check.svg'
 import { CHAT_MODEL, IModelOption } from '@/interface/common';
 import { useSetRecoilState } from 'recoil';
 import { currentChatModelState } from '@/store/atom';
 import StyledTooltip from '../StyledTooltip';
 import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
 import { useToggleSideBar } from '@/hooks/index';
+import LogoGpt3 from '@/assets/icons/icon-gpt-3.5.svg'
+import LogoGpt4 from '@/assets/icons/icon-gpt-4.svg'
+import Logo4o from '@/assets/icons/icon-gpt-4o.svg'
+
+const LogoMaps: Record<CHAT_MODEL, ReactNode> = {
+    [CHAT_MODEL.GPT_3_5_TURBO]: <LogoGpt3 />,
+    [CHAT_MODEL.GPT_4_TURBO]: <LogoGpt4 />,
+    [CHAT_MODEL.GPT_4o]: <Logo4o />
+}
 
 export function ModelSelect({
     modeList,
@@ -107,21 +115,20 @@ export function ModelSelect({
                 }}
                 {...placement as any}
             >
-
                 {
                     modeList.map((item) => {
                         return (
                             <MenuItem key={item.mode} onClick={() => handleClickItem(item.mode)}>
                                 <div className='flex-1 flex gap-2 items-center justify-between m-1.5 rounded p-2.5 text-sm cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                                    <div className='flex-shrink-0 '>
-                                        <IconGpt />
+                                    <div className='flex-shrink-0 bg-[#ececec] flex  w-7 h-7 items-center justify-center rounded-full'>
+                                        {LogoMaps[item.mode]}
                                     </div>
                                     <div className='flex flex-col flex-1'>
                                         {item.mode}
                                         <div className='text-token-text-tertiary text-xs'>{item.description}</div>
                                     </div>
                                     <div className={cn('flex-shrink-0 w-4 h-4 hidden', { '!block': model === item.mode })}>
-                                        <IconRight />
+                                        <IconChecked />
                                     </div>
                                 </div>
                             </MenuItem>
@@ -149,11 +156,6 @@ export default function PageHeader({ modeList, onChangeModel }: { modeList: IMod
                 </StyledTooltip>
                 <ModelSelect modeList={modeList} onChange={onChangeModel} />
             </div>
-            {/* <div className='flex gap-2 pr-1'>
-                <button className='h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary'>
-                    <IconShare />
-                </button>
-            </div> */}
         </div >
     )
 }

@@ -10,7 +10,6 @@ import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
 import GlobalInputForm from '@/component/Footer';
 import { EventSourceMessage, EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { CHAT_ROLE, IStreamItem, MESSAGE_TYPE } from '@/interface/chat';
-import { useMediaQuery } from '@mui/material';
 import { CHAT_MODEL_CONVERTER } from '@/interface/common';
 import Welcome from '@/component/Welcome';
 import { newConversationState, userInfoState } from '@/store/atom';
