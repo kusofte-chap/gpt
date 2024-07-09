@@ -12,6 +12,7 @@ import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
 import Spinning from '@/component/Spinning';
 import toast from '@/until/message';
 import 'photoswipe/style.css';
+import { useMediaQuery } from '@mui/material';
 
 const LoadingSkeleton = () => {
     return (
@@ -23,7 +24,7 @@ const LoadingSkeleton = () => {
 
 const CreatingSkeleton = ({ isCreating }: { isCreating: boolean }) => {
     if (!isCreating) {
-        return
+        return null
     }
     return (
         <div className='w-full h-[200px] rounded-lg border bg-white flex items-center justify-center '>
@@ -79,10 +80,11 @@ export default function AiGcWindow() {
     const ctrRef = useRef<AbortController | null>(null)
     const [isCreating, setIsCreating] = useState(false)
     const [imageList, setImageList] = useState<IImageItem[]>([])
-    // const [model, setModel] = useState(CHAT_MODEL.DALL_E_3)
 
     const currentPage = useRef(1)
     const totalPages = useRef(-1)
+
+    const isDesktop = useMediaQuery('(min-width: 768px)')
 
     const imageListApi = useRequest(getImageList, {
         onSuccess: (rst) => {
@@ -96,7 +98,7 @@ export default function AiGcWindow() {
         setIsCreating(true)
         generateImage({ prompt: inputPrompt, model: IMAGE_MODEL.DALL_E_3 }).then(rst => {
             if (rst) {
-                setImageList((prev => ([rst, ...prev])))
+                setImageList((prev => (isDesktop ? [rst, ...prev] : [...prev, rst])))
             } else {
                 toast.error('生成失败')
             }
@@ -160,11 +162,12 @@ export default function AiGcWindow() {
                         <div className='w-full py-0 px-3 text-base m-auto pt-4 md:py-5 md:px-5 lg:px-1 xl:px-5'>
                             {imageListApi.loading && <LoadingSkeleton />}
                             <div id='gallery-started' className="flex flex-wrap justify-between md:justify-start gap-[10px] w-full pswp-gallery md:max-w-[48rem] m-auto">
-                                {/* <CreatingSkeleton isCreating={isCreating} /> */}
+                                <CreatingSkeleton isCreating={isCreating && isDesktop} />
                                 {imageList.map((item, index) => (
                                     <MediaImage key={index} data={item} />
                                 ))
                                 }
+                                <CreatingSkeleton isCreating={isCreating && !isDesktop} />
                             </div>
                         </div>
 
