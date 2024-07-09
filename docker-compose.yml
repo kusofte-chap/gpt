@@ -1,0 +1,16 @@
+services:
+  chatgpt-front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatgpt-front
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+    networks:
+      - comnetwork
+
+networks:
+  comnetwork:
+    external: true
