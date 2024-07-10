@@ -10,12 +10,13 @@ import { SelfChatItem, GptChatItem } from '@/component/ChatItem';
 import GlobalInputForm from '@/component/Footer';
 import { EventSourceMessage, EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { CHAT_ROLE, IStreamItem, MESSAGE_TYPE } from '@/interface/chat';
-import { CHAT_MODEL_CONVERTER } from '@/interface/common';
+import { CHAT_MODEL, CHAT_MODEL_CONVERTER } from '@/interface/common';
 import Welcome from '@/component/Welcome';
 import { newConversationState, userInfoState } from '@/store/atom';
 import { FatalError, RetriableError } from '@/api/request';
 import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
 import HistoryRecordChat from '@/component/HistoryRecordChat';
+import { useSearchParams } from 'next/navigation';
 
 interface IContentProps {
     conversationId?: string
@@ -27,6 +28,8 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     const [isDirty, setIsDirty] = useState(false)
     const [startWrite, setStartWrite] = useState(false)
     const [isStreaming, setIsStreaming] = useState(false)
+    const searchParams = useSearchParams()
+    const [chatModel, setChatModel] = useState(searchParams.get('model') || CHAT_MODEL.GPT_4o)
 
     const messageQueue = useRef<IStreamItem[]>([])
     const messageBuffer = useRef<string>('')
@@ -142,7 +145,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
             "messages": {
                 "content": inputPrompt.trim()
             },
-            "model": "gpt-3.5-turbo",
+            "model": chatModel,
             "conversation_mode": {
                 "kind": "primary_assistant"
             }
@@ -227,7 +230,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     return (
         <div className="flex h-full flex-col focus-visible:outline-0" role='presentation'>
             <div className='hidden md:block'>
-                <PageHeader modeList={CHAT_MODEL_CONVERTER} />
+                <PageHeader modeList={CHAT_MODEL_CONVERTER} onChangeModel={setChatModel} />
             </div>
             {
                 isNewChat && !isDirty ? <Welcome /> : <div className='flex-1 overflow-hidden'>

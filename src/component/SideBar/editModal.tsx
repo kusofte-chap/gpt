@@ -1,11 +1,12 @@
 'use client'
 
-import { ReactNode, useState } from "react";
+import { Fragment, ReactNode, useState } from "react";
 import IconSetting from '@/assets/icons/icon-setting.svg'
 import IconLogoOut from '@/assets/icons/icon-logout.svg'
-import { FormHelperText, FormLabel, IconButton, InputAdornment, Modal, Stack, TextField } from "@mui/material";
+import { Avatar, Button, Divider, FormHelperText, FormLabel, IconButton, InputAdornment, Modal, Stack, TextField } from "@mui/material";
 import IconClose from '@/assets/icons/icon-close.svg'
 import IconSafe from '@/assets/icons/icon-safe.svg'
+import IconProfile from '@/assets/icons/icon-profile.svg'
 import cn from 'classnames'
 import { Controller, useForm } from "react-hook-form";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -15,15 +16,40 @@ import { updatePassword, uploadAvatar } from "@/api/auth";
 import toast from "@/until/message";
 import encrypt from "@/until/encrypt";
 import { handleLogout } from "@/until/index";
-import { Avatar } from "@files-ui/react";
 import { useRecoilState } from "recoil";
 import { userInfoState } from "@/store/atom";
+import { deepOrange } from "@mui/material/colors";
+import IconSpinning from '@/assets/icons/spinning.svg';
+import ImgCrop from "antd-img-crop";
+import { Upload } from "antd";
+import type { GetProp, UploadProps } from 'antd';
+import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 
 interface ITabPanelProps {
     children?: React.ReactNode;
     index: number;
     value: number;
 }
+
+type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
+
+const getBase64 = (img: FileType, callback: (url: string) => void) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => callback(reader.result as string));
+    reader.readAsDataURL(img);
+};
+
+const beforeUpload = (file: FileType) => {
+    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+    if (!isJpgOrPng) {
+        toast.error('请上传JPG/PNG格式!');
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+        toast.error('图片大小不能超过2MB!');
+    }
+    return isJpgOrPng && isLt2M;
+};
 
 const ButtonItem = ({ children, onClick }: { children: ReactNode, onClick?: () => void }) => {
     return (
@@ -83,19 +109,120 @@ function TabPanel(props: ITabPanelProps) {
 interface IFormFields {
     oldPass: string
     newPass: string
+    confirmPass: string
+}
+
+function EditAvatar() {
+    const [userInfo, setUserInfo] = useRecoilState(userInfoState)
+    const [imageUrl, setImageUrl] = useState(userInfo?.user?.avatarUrl)
+    const [loading, setLoading] = useState(false);
+
+    const handleChange: UploadProps['onChange'] = (info) => {
+        if (info.file.status === 'uploading') {
+            setLoading(true);
+            return;
+        }
+        if (info.file.status === 'done') {
+            setLoading(false);
+            getBase64(info.file.originFileObj as FileType, (url) => {
+                setImageUrl(url);
+            });
+            if (info.file.response) {
+                setUserInfo((old => {
+                    if (old) {
+                        return {
+                            ...old,
+                            user: {
+                                ...old.user,
+                                avatarUrl: info.file.response.avatarUrl
+                            }
+                        }
+                    }
+                    return {
+                        authorities: [],
+                        user: {
+                            id: '',
+                            username: '',
+                            avatarUrl: info.file.response.avatarUrl
+                        }
+                    }
+                }))
+            }
+        }
+    };
+
+    const uploadButton = (
+        <button style={{ border: 0, background: 'none' }} type="button">
+            {loading ? <LoadingOutlined /> : <PlusOutlined />}
+            <div style={{ marginTop: 8 }}>{loading ? '上传中...' : '上传头像'}</div>
+        </button>
+    );
+
+    return (
+        <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-20 h-20 flex items-center justify-center">
+                <ImgCrop
+                    showGrid
+                    rotationSlider
+                    aspectSlider
+                    showReset
+                    quality={0.5}
+                    aspect={1}
+                    modalTitle="编辑头像"
+                    modalProps={{
+                        zIndex: 10000,
+                    }}
+                    fillColor="#000"
+                    modalOk="上传"
+                    modalCancel="取消"
+                >
+                    <Upload
+                        style={{ padding: '2px' }}
+                        name="avatar"
+                        listType="picture-circle"
+                        className="avatar-uploader"
+                        showUploadList={false}
+                        action={`${process.env.NEXT_PUBLIC_API_URL}/api/users/updateAvatar`}
+                        beforeUpload={beforeUpload}
+                        onChange={handleChange}
+                        headers={{
+                            Authorization: `Bearer ${localStorage.getItem('gpt_token')}`
+                        }}
+                    >
+                        {imageUrl ? loading ? uploadButton : <Avatar
+                            src={imageUrl}
+                            sx={{
+                                width: 80,
+                                height: 80,
+                                bgcolor: deepOrange[500],
+                                '.MuiAvatar-root': {
+                                    fontSize: '14px'
+                                }
+                            }}
+                        />
+                            : uploadButton}
+                    </Upload>
+                </ImgCrop>
+            </div>
+        </div>
+    )
 }
 
 function EditPassWord() {
+    const [userInfo, setUserInfo] = useRecoilState(userInfoState)
+    const [errorMsg, setErrorMsg] = useState('')
+
     const { control, getValues, handleSubmit } = useForm<IFormFields>({
         defaultValues: {
             oldPass: '',
-            newPass: ''
+            newPass: '',
+            confirmPass: ''
         }
     })
 
-    const [errorMsg, setErrorMsg] = useState('')
-    const [showOldPass, setOldPass] = useState(false)
-    const [showNewPass, setShowOldPss] = useState(false)
+    const [showOldPass, setShowOldPass] = useState(false)
+    const [showNewPass, setShowNewPass] = useState(false)
+    const [showConfirmPass, setShowConfirmPass] = useState(false)
 
     const api = useRequest(updatePassword, {
         manual: true,
@@ -117,189 +244,177 @@ function EditPassWord() {
 
     return (
         <div className="w-full flex flex-col flex-1">
-            <div className='w-full mb-5'>
-                <Controller
-                    name='oldPass'
-                    control={control}
-                    rules={{
-                        required: '請輸入8-20位英數字或符號',
-                        pattern: {
-                            value: /^[a-zA-Z0-9]{6,20}$/,
-                            message: '請輸入6-20位英數字或符號'
-                        }
-                    }}
-                    render={({ field, fieldState: { error, invalid } }) => (
-                        <TextField
-                            {...field}
-                            size="small"
-                            type={showOldPass ? 'text' : 'password'}
-                            fullWidth
-                            error={invalid}
-                            helperText={error?.message}
-                            placeholder='請輸入旧密碼'
-                            variant="outlined"
-                            autoComplete='off'
-                            onFocus={() => setErrorMsg('')}
-                            sx={{
-                                '.MuiFormHelperText-root': {
-                                    margin: 0
+            <div className="mb-2">
+                个性化您的构建者个人资料，以便与您的 GPT 的用户建立联系。这些设置将应用于公开共享的 GPT。
+            </div>
+            <EditAvatar />
+            <div className="w-full flex flex-col justify-center gap-3">
+                <div className="w-full flex flex-col gap-2">
+                    <div className="text-sm text-black font-medium">名称</div>
+                    <div className="text-sm text-black">{userInfo?.user?.username}</div>
+                </div>
+                <Divider className="my-3 border-token-border-light" />
+                <div className="w-full flex gap-2">
+                    <div className="text-sm text-black font-medium w-20 h-10 flex items-center flex-shrink-0">旧密码</div>
+                    <div className="flex items-center flex-grow">
+                        <Controller
+                            name='oldPass'
+                            control={control}
+                            rules={{
+                                required: '請輸入8-20位英數字或符號',
+                                pattern: {
+                                    value: /^[a-zA-Z0-9]{6,20}$/,
+                                    message: '請輸入6-20位英數字或符號'
                                 }
                             }}
-                            InputProps={{
-                                endAdornment:
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            size='small'
-                                            edge="end"
-                                            onClick={() => setOldPass(!showOldPass)}
-                                        >
-                                            {showOldPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
-                                        </IconButton>
-                                    </InputAdornment>
-                            }}
+                            render={({ field, fieldState: { error, invalid } }) => (
+                                <TextField
+                                    {...field}
+                                    size="small"
+                                    type={showOldPass ? 'text' : 'password'}
+                                    fullWidth
+                                    error={invalid}
+                                    helperText={error?.message}
+                                    placeholder='请输入旧密码'
+                                    variant="outlined"
+                                    autoComplete='off'
+                                    onFocus={() => setErrorMsg('')}
+                                    sx={{
+                                        '.MuiFormHelperText-root': {
+                                            margin: 0
+                                        }
+                                    }}
+                                    InputProps={{
+                                        endAdornment:
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    size='small'
+                                                    edge="end"
+                                                    onClick={() => setShowOldPass(!showOldPass)}
+                                                >
+                                                    {showOldPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                    }}
+                                />
+                            )}
                         />
-                    )}
-                />
-            </div>
-            <div className='w-full mb-5'>
-                <Controller
-                    name='newPass'
-                    control={control}
-                    rules={{
-                        required: '请输入新密码',
-                        validate: (value) => value !== getValues('oldPass') || '新密码与旧密码相同'
-                    }}
-                    render={({ field, fieldState: { error, invalid } }) => (
-                        <TextField
-                            {...field}
-                            type={showNewPass ? 'text' : 'password'}
-                            fullWidth
-                            size="small"
-                            error={invalid}
-                            helperText={error?.message}
-                            placeholder='请输入新密码'
-                            variant="outlined"
-                            autoComplete='off'
-                            onFocus={() => setErrorMsg('')}
-                            sx={{
-                                '.MuiFormHelperText-root': {
-                                    margin: 0
+                    </div>
+                </div>
+                <div className="w-full flex gap-2">
+                    <div className="text-sm text-black font-medium w-20  h-10 flex items-center flex-shrink-0">新密码</div>
+                    <div className="flex items-center flex-grow">
+                        <Controller
+                            name='newPass'
+                            control={control}
+                            rules={{
+                                required: '請輸入8-20位英數字或符號',
+                                pattern: {
+                                    value: /^[a-zA-Z0-9]{6,20}$/,
+                                    message: '請輸入6-20位英數字或符號'
                                 }
                             }}
-                            InputProps={{
-                                endAdornment:
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            size='small'
-                                            edge="end"
-                                            onClick={() => setShowOldPss(!showNewPass)}
-                                        >
-                                            {showNewPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
-                                        </IconButton>
-                                    </InputAdornment>
-                            }}
+                            render={({ field, fieldState: { error, invalid } }) => (
+                                <TextField
+                                    {...field}
+                                    size="small"
+                                    type={showNewPass ? 'text' : 'password'}
+                                    fullWidth
+                                    error={invalid}
+                                    helperText={error?.message}
+                                    placeholder='请输入新密码'
+                                    variant="outlined"
+                                    autoComplete='off'
+                                    onFocus={() => setErrorMsg('')}
+                                    sx={{
+                                        '.MuiFormHelperText-root': {
+                                            margin: 0
+                                        }
+                                    }}
+                                    InputProps={{
+                                        endAdornment:
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    size='small'
+                                                    edge="end"
+                                                    onClick={() => setShowNewPass(!showNewPass)}
+                                                >
+                                                    {showNewPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                    }}
+                                />
+                            )}
                         />
-                    )}
-                />
-            </div>
-            <div className='w-full mb-1'>
-                <button
-                    disabled={api.loading}
-                    onClick={handleOnSubmit}
-                    className='w-full h-10 bg-[#10a37f] disabled:bg-[#10a37f]/[0.5] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-ok-btn'>
-                    确定
-                </button>
-            </div>
-            {
-                errorMsg && <FormHelperText error sx={{ fontSize: '14px' }}>{errorMsg}</FormHelperText>
-            }
-        </div>
-    )
-}
-
-
-
-function EditAvatar() {
-    const [userInfo, setUserInfo] = useRecoilState(userInfoState)
-    const [imageSource, setImageSource] = useState<string | File>(userInfo?.user?.avatarUrl || '');
-    const [errorMsg, setErrorMsg] = useState('');
-
-    const avatarApi = useRequest(uploadAvatar, {
-        manual: true,
-        onSuccess: (rst: any) => {
-            if (rst) {
-                setUserInfo((old => {
-                    if (old) {
-                        return {
-                            ...old,
-                            user: {
-                                ...old.user,
-                                avatarUrl: rst.avatarUrl
+                    </div>
+                </div>
+                <div className="w-full flex gap-2">
+                    <div className="text-sm text-black font-medium w-20  h-10 flex items-center flex-shrink-0">确认密码</div>
+                    <div className="flex items-center flex-grow">
+                        <Controller
+                            name='confirmPass'
+                            control={control}
+                            rules={{
+                                required: '请输入再次输入新密码',
+                                validate: (value) => value === getValues('newPass') || '确认密码与新密码不相同'
+                            }}
+                            render={({ field, fieldState: { error, invalid } }) => (
+                                <TextField
+                                    {...field}
+                                    type={showConfirmPass ? 'text' : 'password'}
+                                    fullWidth
+                                    size="small"
+                                    error={invalid}
+                                    helperText={error?.message}
+                                    placeholder='请再次输入新密码'
+                                    variant="outlined"
+                                    autoComplete='off'
+                                    onFocus={() => setErrorMsg('')}
+                                    sx={{
+                                        '.MuiFormHelperText-root': {
+                                            margin: 0
+                                        }
+                                    }}
+                                    InputProps={{
+                                        endAdornment:
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    size='small'
+                                                    edge="end"
+                                                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                                >
+                                                    {showConfirmPass ? <VisibilityOutlinedIcon fontSize='small' /> : <VisibilityOffOutlinedIcon fontSize='small' />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                    }}
+                                />
+                            )}
+                        />
+                    </div>
+                </div>
+                <div className='w-full flex items-center gap-2'>
+                    <div className="w-20 flex-shrink-0" />
+                    <div className="flex flex-col gap-2 flex-grow">
+                        <button
+                            className=' flex items-center justify-center gap-2 disabled:opacity-50 w-full h-[40px] bg-[#10a37f] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-[inset_0_0_0_150px_#0000001a]'
+                            onClick={handleOnSubmit}
+                            disabled={api.loading}
+                        >
+                            {
+                                api.loading ? <Fragment>
+                                    <IconSpinning />
+                                    确认...
+                                </Fragment> : '确认'
                             }
-                        }
-                    }
-                    return {
-                        authorities: [],
-                        user: {
-                            id: '',
-                            username: '',
-                            avatarUrl: rst.avatarUrl
-                        }
-                    }
-                }))
-            }
-            toast.success('修改成功')
-        },
-        onError: (error: any) => {
-            setErrorMsg(error?.response?.data?.message || "登陆失败")
-        }
-    })
-
-    const isLimit2M = (file: File) => {
-        return file.size / 1024 / 1024 <= 2
-    }
-    const handleChangeSource = (selectedFile: any) => {
-        setErrorMsg('')
-        if (!isLimit2M(selectedFile)) {
-            setErrorMsg('文件大小超过2M')
-        }
-        setImageSource(selectedFile);
-    };
-
-    const handleOnConfirmUpdateAvatar = () => {
-        if (imageSource instanceof File) {
-            if (!isLimit2M(imageSource)) {
-                return
-            }
-            avatarApi.run(imageSource)
-        }
-    }
-
-    return (
-        <div className="w-full h-full flex flex-col items-center justify-center">
-            <Avatar
-                src={imageSource}
-                onChange={handleChangeSource}
-                variant="circle"
-                emptyLabel="请选择头像"
-                loadingLabel="上传中..."
-                changeLabel="点击头像修改"
-                smartImgFit='center'
-                isLoading={avatarApi.loading}
-                alt="头像"
-            />
-            <div className="text-sm text-token-text-secondary my-3 h-5">
-                <FormHelperText error sx={{ fontSize: '14px', m: 0 }}>{errorMsg}</FormHelperText>
+                        </button>
+                        {errorMsg && <div className='text-sm text-red-500'>{errorMsg}</div>}
+                    </div>
+                </div>
             </div>
-            <button
-                disabled={avatarApi.loading}
-                onClick={handleOnConfirmUpdateAvatar}
-                className="w-20 h-8 bg-[#10a37f] disabled:bg-[#10a37f]/[0.5] tracking-[1.5px] rounded-[4px] border-0 text-white font-medium hover:shadow-ok-btn">
-                {avatarApi.loading ? '上传中...' : '确定'}
-            </button>
         </div>
     )
 }
+
 
 export function EditPersonInfoDialog({ open, onClose }: { open: boolean, onClose: () => void }) {
     const [value, setValue] = useState(0);
@@ -314,41 +429,31 @@ export function EditPersonInfoDialog({ open, onClose }: { open: boolean, onClose
             <div className="w-full h-full flex items-center justify-center">
                 <div className="flex flex-col w-[680px] rounded-lg bg-white h-auto min-h-[300px] overflow-hidden">
                     <div className="px-4 pb-4 pt-5 sm:p-6 flex items-center justify-between border-b border-black/10 ">
-                        <span className="text-lg font-medium leading-6 text-token-text-primary">设置</span>
+                        <div className="text-lg font-medium leading-6 text-token-text-primary">设置</div>
                         <button className="w-6 h-6 text-token-text-tertiary hover:text-token-text-secondary" onClick={handleOnClose}>
                             <IconClose />
                         </button>
                     </div>
-                    <div className="flex-grow overflow-y-auto">
-                        <Stack direction='row'>
+                    <div className="flex-grow">
+                        <Stack direction='row' height={600}>
                             <div className="m-2 md:m-0 md:px-4 md:pt-5 flex flex-shrink-0  md:min-w-[180px] max-w-[200px] border-r border-black/10 flex-col gap-2">
                                 <button
                                     className={cn("group flex items-center justify-start gap-2 rounded-md px-2 py-2 text-sm text-token-text-primary", { 'bg-token-main-surface-tertiary': 0 === value })}
                                     onClick={() => setValue(0)}
                                 >
-                                    <IconSafe />
-                                    修改密码
-                                </button>
-                                <button
-                                    className={cn("group flex items-center justify-start gap-2 rounded-md px-2 py-1.5 text-sm text-token-text-primary", { 'bg-token-main-surface-tertiary': 1 === value })}
-                                    onClick={() => setValue(1)}
-                                >
-                                    <IconSafe />
-                                    编辑头像
+                                    <IconProfile />
+                                    构建者个人资料
                                 </button>
                             </div>
-                            <div className="max-h-[calc(100vh-150px)] w-full overflow-y-auto md:min-h-[380px]">
+                            <div className=" w-full max-h-[calc(100vh-150px)] overflow-y-auto md:min-h-[380px]">
                                 <TabPanel value={value} index={0}>
                                     <EditPassWord />
-                                </TabPanel>
-                                <TabPanel value={value} index={1}>
-                                    <EditAvatar />
                                 </TabPanel>
                             </div>
                         </Stack>
                     </div>
                 </div>
             </div>
-        </Modal>
+        </Modal >
     )
 }

@@ -1,18 +1,18 @@
 'use client'
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+
+import { ReactNode, useMemo, useState } from 'react';
 import { Menu, MenuItem, useMediaQuery } from '@mui/material';
 import cn from 'classnames'
 import IconMenu from '@/assets/icons/icon-menu.svg'
 import IconChecked from '@/assets/icons/icon-check.svg'
 import { CHAT_MODEL, IModelOption } from '@/interface/common';
-import { useSetRecoilState } from 'recoil';
-import { currentChatModelState } from '@/store/atom';
 import StyledTooltip from '../StyledTooltip';
 import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
 import { useToggleSideBar } from '@/hooks/index';
 import LogoGpt3 from '@/assets/icons/icon-gpt-3.5.svg'
 import LogoGpt4 from '@/assets/icons/icon-gpt-4.svg'
 import Logo4o from '@/assets/icons/icon-gpt-4o.svg'
+import { useSearchParams } from 'next/navigation';
 
 const LogoMaps: Record<CHAT_MODEL, ReactNode> = {
     [CHAT_MODEL.GPT_3_5_TURBO]: <LogoGpt3 />,
@@ -24,19 +24,14 @@ export function ModelSelect({
     modeList,
     onChange
 }: { modeList: IModelOption[], onChange?: (m: CHAT_MODEL) => void }) {
-    const [model, setModel] = useState(modeList[0].mode)
-    const setGlobalModel = useSetRecoilState(currentChatModelState)
+    const searchParams = useSearchParams()
+    const defaultModel = searchParams.get('model')
+    const [model, setModel] = useState(defaultModel || modeList[0].mode)
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
     const isMobile = useMediaQuery('(max-width: 768px)');
-
-    useEffect(() => {
-        if (modeList.length > 1) {
-            setModel(modeList[0].mode)
-        }
-    }, [modeList])
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -49,8 +44,8 @@ export function ModelSelect({
     const handleClickItem = (model: CHAT_MODEL) => {
         setModel(model)
         onChange?.(model)
-        setGlobalModel(model)
         setAnchorEl(null);
+        history.replaceState(null, '', `?model=${model}`);
     };
 
     const placement = useMemo(() => {

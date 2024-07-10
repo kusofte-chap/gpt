@@ -45,3 +45,8 @@ export const mobileDrawerState = atom({
     key: 'gpt-mobile-drawer-key',
     default: false
 })
+
+export const refreshAsstList = atom({
+    key: 'gpt-refresh-asst-key',
+    default: false
+})

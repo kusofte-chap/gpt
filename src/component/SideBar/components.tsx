@@ -22,8 +22,8 @@ import {
     TransitionGroup,
 } from 'react-transition-group';
 import ChatGptLogo from '@/assets/logo.svg'
-import { useSetRecoilState } from 'recoil'
-import { mobileDrawerState } from '@/store/atom'
+import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { mobileDrawerState, refreshAsstList } from '@/store/atom'
 
 export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: string) => void }) {
     const { activeItemId, setActiveItemId } = useContext(PopoverContext)
@@ -94,7 +94,7 @@ export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (i
 
     const genUrl = (data: IHistoryItem) => {
         if (data.type === 'chat') {
-            return `/chat/${data.conversation_id}`
+            return `/chat/${data.conversation_id}?model=${data.model}`
         }
         return `/gpts/${data.assistant_id}/c/${data.conversation_id}`
     }
@@ -191,15 +191,33 @@ export function HistoryGroup({ chatList, onDelete, title, }: {
 }
 
 export function UsedAsstGPTs() {
-    const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed)
+    const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed, {
+        manual: true,
+    })
     const setMobileSideBar = useSetRecoilState(mobileDrawerState)
+    const refreshAssts = useRecoilValue(refreshAsstList)
+
     const isMobile = useMediaQuery('(max-width: 768px)')
+
+    const isFirst = useRef(true)
 
     const handleClick = () => {
         if (isMobile) {
             setMobileSideBar(false)
         }
     }
+
+    useEffect(() => {
+        asstListApi.run()
+    }, [])
+
+    useEffect(() => {
+        if (isFirst.current) {
+            isFirst.current = false
+            return
+        }
+        asstListApi.refresh()
+    }, [refreshAssts])
 
     if (asstListApi.loading) {
         return null

@@ -13,8 +13,8 @@ import { EventSourceMessage, EventStreamContentType, fetchEventSource } from '@m
 import { CHAT_ROLE, IStreamItem, MESSAGE_TYPE } from '@/interface/chat';
 import { asyncGetGptsInfo } from '@/api/gpts';
 import { IGroupListItem } from '@/interface/gpts';
-import { newConversationState, userInfoState } from '@/store/atom';
-import { useParams, useSearchParams } from 'next/navigation';
+import { newConversationState, refreshAsstList, userInfoState } from '@/store/atom';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Spinning from '@/component/Spinning';
 import ScrollBottomWrapper from '@/component/ScrollBottomWrapper';
 import { FatalError, RetriableError } from '@/api/request';
@@ -27,12 +27,17 @@ import { Menu, MenuItem, useMediaQuery } from '@mui/material';
 import IconEdit from '@/assets/icons/icon-edit.svg'
 import IconInfo from '@/assets/icons/icon-info.svg'
 import IconHide from '@/assets/icons/icon-hide.svg'
+import RoleModal from '../ roleModal';
+import { deleteConversation } from '@/api/gpt';
+import toast from '@/until/message';
 
-export function AsstPageHeader({ asstName }: { asstName: string }) {
+export function AsstPageHeader({ data, }: { data: IGroupListItem, }) {
     const isDesktop = useMediaQuery('(min-width: 768px)')
     const { openSidebar, toggleCloseSideBar } = useToggleSideBar()
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
+    const [openRoleModal, setOpenRoleModal] = useState(false)
+    const router = useRouter()
+    const setRefresh = useSetRecoilState(refreshAsstList)
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -40,6 +45,16 @@ export function AsstPageHeader({ asstName }: { asstName: string }) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    const deleteApi = useRequest(deleteConversation, {
+        manual: true,
+        onSuccess: () => {
+            setRefresh(prev => !prev)
+        },
+        onError: (error: any) => {
+            toast.error("删除失败")
+        }
+    })
     const open = Boolean(anchorEl);
 
     const placement = useMemo(() => {
@@ -56,95 +71,102 @@ export function AsstPageHeader({ asstName }: { asstName: string }) {
     }, [isDesktop])
 
     return (
-        <div className='sticky top-0 mb-1.5 flex items-center gap-2 z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
-            {isDesktop && !openSidebar && <div className='flex items-center gap-2 overflow-hidden'>
-                <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
+        <>
+            <div className='sticky top-0 mb-1.5 flex items-center gap-2 z-10 h-14 p-2 font-semibold bg-token-main-surface-primary'>
+                {isDesktop && !openSidebar && <div className='flex items-center gap-2 overflow-hidden'>
+                    <StyledTooltip title='关闭侧栏' placement='bottom' arrow>
+                        <button
+                            onClick={toggleCloseSideBar}
+                            className={cn('h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary', { 'hidden': openSidebar })}>
+                            <IconCloseMenu />
+                        </button>
+                    </StyledTooltip>
+                </div>}
+                <div className='flex items-center gap-2 overflow-hidden'>
                     <button
-                        onClick={toggleCloseSideBar}
-                        className={cn('h-10 rounded-lg px-2 text-token-text-secondary focus-visible:outline-0 hover:bg-token-sidebar-surface-secondary focus-visible:bg-token-sidebar-surface-secondary', { 'hidden': openSidebar })}>
-                        <IconCloseMenu />
+                        onClick={handleClick}
+                        aria-controls={open ? 'gpt-modal-select-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? 'true' : undefined}
+                        className='group flex cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary text-token-text-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
+                        {`${data?.name}`}
+                        <IconMenuDown />
                     </button>
-                </StyledTooltip>
-            </div>}
-            <div className='flex items-center gap-2 overflow-hidden'>
-                <button
-                    onClick={handleClick}
-                    aria-controls={open ? 'gpt-modal-select-menu' : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open ? 'true' : undefined}
-                    className='group flex cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary text-token-text-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
-                    {`${asstName}`}
-                    <IconMenuDown />
-                </button>
-            </div>
-            <Menu
-                anchorEl={anchorEl}
-                id="gpt-modal-select-menu"
-                open={open}
-                onClose={handleClose}
-                onClick={handleClose}
-                slotProps={{
-                    paper: {
-                        elevation: 0,
+                </div>
+                <Menu
+                    anchorEl={anchorEl}
+                    id="gpt-modal-select-menu"
+                    open={open}
+                    onClose={handleClose}
+                    onClick={handleClose}
+                    slotProps={{
+                        paper: {
+                            elevation: 0,
+                            sx: {
+                                p: 0,
+                                width: 138,
+                                mt: '4px',
+                                py: 1,
+                                borderRadius: '8px',
+                                border: '1px solid #e0e0e0',
+                                overflow: 'visible',
+                                boxShadow: '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)'
+                            },
+                        },
+                    }}
+                    MenuListProps={{
                         sx: {
                             p: 0,
-                            width: 138,
-                            mt: '4px',
-                            py: 1,
-                            borderRadius: '8px',
-                            border: '1px solid #e0e0e0',
-                            overflow: 'visible',
-                            boxShadow: '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)'
-                        },
-                    },
-                }}
-                MenuListProps={{
-                    sx: {
-                        p: 0,
-                        '.MuiMenuItem-root': {
-                            p: 0,
-                            bgcolor: 'transparent',
-                            ':hover': {
-                                bgcolor: 'unset'
+                            '.MuiMenuItem-root': {
+                                p: 0,
+                                bgcolor: 'transparent',
+                                ':hover': {
+                                    bgcolor: 'unset'
+                                }
                             }
                         }
-                    }
-                }}
-                {...placement as any}
-            >
-                <MenuItem >
-                    <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                        <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
-                            <IconEdit />
+                    }}
+                    {...placement as any}
+                >
+                    <MenuItem onClick={() => {
+                        router.replace(`/gpts/${data.id}`)
+                    }} >
+                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                                <IconEdit />
+                            </div>
+                            新聊天
                         </div>
-                        新聊天
-                    </div>
-                </MenuItem>
-                <MenuItem >
-                    <div className='flex-1 flex gap-2.5 items-center   mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                        <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
-                            <IconInfo />
+                    </MenuItem>
+                    <MenuItem onClick={() => setOpenRoleModal(true)} >
+                        <div className='flex-1 flex gap-2.5 items-center   mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                                <IconInfo />
+                            </div>
+                            关于
                         </div>
-                        关于
-                    </div>
-                </MenuItem>
-                <MenuItem >
-                    <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                        <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
-                            <IconHide />
+                    </MenuItem>
+                    <MenuItem onClick={() => {
+                        deleteApi.run(data?.id)
+                    }}>
+                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                                <IconHide />
+                            </div>
+                            从边栏隐藏
                         </div>
-                        从边栏隐藏
-                    </div>
-                </MenuItem>
-            </Menu>
-        </div >
+                    </MenuItem>
+                </Menu>
+            </div >
+            <RoleModal data={data} open={openRoleModal} onClose={() => setOpenRoleModal(false)} />
+        </>
     )
 }
 
 function AsstWelcome({ data, onClickPrompt }: { data: IGroupListItem, onClickPrompt: (prompt: string) => void }) {
     return (
         <div className='relative h-full'>
-            <AsstPageHeader asstName={data?.name} />
+            <AsstPageHeader data={data} />
             <div className='flex h-full flex-col items-center justify-center text-[rgba(103,103,103)]'>
                 <div className='mb-3 h-20 w-20'>
                     <div className='gizmo-shadow-stroke overflow-hidden rounded-full'>
@@ -381,7 +403,7 @@ export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGpt
                         setNewConversation({
                             conversation_id: dataStream.conversation_id,
                             createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
-                            model: 'gpt-4o',
+                            model: '_',
                             title: dataStream.title,
                             updateTime: moment().format('YYYY-MM-DD HH:mm:ss'),
                             type: 'gpt',
@@ -433,7 +455,7 @@ export default function AsstChatWindow({ isInitGptInfoPage = true }: { isInitGpt
                     (isInitGptInfoPage && !isDirty) ? <AsstWelcome data={asstDetail} onClickPrompt={handleClickPrompt} /> :
                         <ScrollBottomWrapper>
                             <div className='flex flex-col text-sm pb-9'>
-                                <AsstPageHeader asstName={asstDetail?.name} />
+                                <AsstPageHeader data={asstDetail} />
                                 {!isInitGptInfoPage &&
                                     <HistoryRecordChat
                                         asstId={asst_id as string}
