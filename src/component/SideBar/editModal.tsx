@@ -154,24 +154,25 @@ function EditAvatar() {
     const uploadButton = (
         <button style={{ border: 0, background: 'none' }} type="button">
             {loading ? <LoadingOutlined /> : <PlusOutlined />}
-            <div style={{ marginTop: 8 }}>上传中...</div>
+            <div style={{ marginTop: 8 }}>{loading ? '上传中...' : '上传头像'}</div>
         </button>
     );
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center">
             <div className="w-20 h-20 flex items-center justify-center">
-
                 <ImgCrop
                     showGrid
                     rotationSlider
                     aspectSlider
                     showReset
+                    quality={0.5}
                     aspect={1}
                     modalTitle="编辑头像"
                     modalProps={{
                         zIndex: 10000,
                     }}
+                    fillColor="#000"
                     modalOk="上传"
                     modalCancel="取消"
                 >
