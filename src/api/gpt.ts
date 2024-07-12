@@ -43,6 +43,14 @@ export const deleteConversation =  (conversation_id:string)=>{
     })  as any
 }
 
+// 设置gpt助手在sidebar中的状态
+export const settingAsstSidebar =  (assts_id:string,action:'hide'|'keep')=>{
+    return request.post(`/api/assistans/${assts_id}/sidebar`,{
+        action
+    })  as any
+}
+
+
 // 生成图片
 export const generateImage = async (params: {
     model: string,

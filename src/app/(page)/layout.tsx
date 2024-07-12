@@ -10,7 +10,12 @@ import { SnackbarProvider } from 'notistack';
 import MobileIconMenu from '@/component/ Drawer'
 import { CHAT_MODEL_CONVERTER } from '@/interface/common'
 import { usePathname } from 'next/navigation'
-import { Typography } from 'antd'
+import { Stack, Typography } from '@mui/material'
+
+
+const Loading = () => {
+    return (<div className='w-screen h-screen flex items-center justify-center text-token-text-primary text-sm'>Application is loading...</div>)
+}
 
 export default function PageLayout({ children }: { children: React.ReactNode }) {
     const asPathName = usePathname()
@@ -34,7 +39,7 @@ export default function PageLayout({ children }: { children: React.ReactNode }) 
 
 
     return (
-        <Suspense fallback={<Typography>error</Typography>}>
+        <Suspense fallback={<Loading />}>
             <RecoilRoot>
                 <Updated />
                 <div className='h-screen w-full overflow-hidden flex relative z-0'>
