@@ -38,6 +38,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
 
     const currentChatIndex = useRef(0)
     const hstRecordLength = useRef(0)
+    const newConversationId = useRef('')
 
     const userInfo = useRecoilValue(userInfoState)
     const setNewConversation = useSetRecoilState(newConversationState)
@@ -151,8 +152,8 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
             }
         }
 
-        if (conversationId) {
-            payload.conversation_id = conversationId
+        if (conversationId || newConversationId.current) {
+            payload.conversation_id = conversationId || newConversationId.current
         }
 
         if (!isDirty) {
@@ -188,6 +189,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
                     const dataStream = JSON.parse(event.data);
                     if (dataStream?.type == MESSAGE_TYPE.TITLE_GENERATION) {
                         history.pushState({}, "", `/chat/${dataStream.conversation_id}`);
+                        newConversationId.current = dataStream.conversation_id
                         setNewConversation({
                             conversation_id: dataStream.conversation_id,
                             createTime: moment().format('YYYY-MM-DD HH:mm:ss'),
