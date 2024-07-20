@@ -27,8 +27,10 @@ const CreatingSkeleton = ({ isCreating }: { isCreating: boolean }) => {
         return null
     }
     return (
-        <div className='w-full h-[200px] rounded-lg border bg-white flex items-center justify-center '>
-            <Spinning />
+        <div className='relative group rounded-lg overflow-hidden w-[calc(50%-10px)] pt-[calc(50%-10px)] md:w-[calc(25%-7.5px)] md:pt-[calc(25%-7.5px)] '>
+            <div className='absolute z-10 top-0 left-0 w-full h-full border border-[#0d0d0d/20] rounded-lg flex items-center justify-center'>
+                <Spinning />
+            </div>
         </div>
     )
 }
@@ -162,13 +164,12 @@ export default function AiGcWindow() {
                         <div className='w-full py-0 px-3 text-base m-auto pt-4 md:py-5 md:px-5 lg:px-1 xl:px-5'>
                             {imageListApi.loading && <LoadingSkeleton />}
                             <div id='gallery-started' className="flex flex-wrap justify-between md:justify-start gap-[10px] w-full pswp-gallery md:max-w-[48rem] m-auto">
-                                {/* <CreatingSkeleton isCreating={isCreating && isDesktop} /> */}
+                                <CreatingSkeleton isCreating={isCreating && isDesktop} />
                                 {imageList.map((item, index) => (
                                     <MediaImage key={index} data={item} />
                                 ))
                                 }
-                                {/* <CreatingSkeleton isCreating={isCreating && !isDesktop} /> */}
-                                <CreatingSkeleton isCreating />
+                                <CreatingSkeleton isCreating={isCreating && !isDesktop} />
                             </div>
                         </div>
 

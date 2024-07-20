@@ -9,7 +9,7 @@ import moment from 'moment';
 import _groupBy from 'lodash/groupBy'
 import toast from '@/until/message';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { mobileDrawerState, newConversationState } from '@/store/atom';
+import { mobileDrawerState, newConversationState, refreshAsstList } from '@/store/atom';
 import { PopoverContext, PopoverProvider } from './context';
 import Spinning from '../Spinning';
 import cn from 'classnames'
@@ -18,6 +18,8 @@ import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
 import StyledTooltip from '../StyledTooltip';
 import { useToggleSideBar } from '@/hooks/index';
 import { useMediaQuery } from '@mui/material';
+import { IGroupListItem } from '@/interface/gpts';
+import { asyncGptsUsed } from '@/api/gpts';
 
 interface Result {
     list: IHistoryItem[];
@@ -72,6 +74,7 @@ function SideBarContent() {
     const setMobileSideBar = useSetRecoilState(mobileDrawerState)
     const newConversation = useRecoilValue(newConversationState)
     const scrollRef = useRef<HTMLDivElement>(null)
+    const refreshAssts = useRecoilValue(refreshAsstList)
 
     const { setActiveItemId } = useContext(PopoverContext)
     const { toggleCloseSideBar } = useToggleSideBar()
@@ -88,6 +91,10 @@ function SideBarContent() {
             }
         },
     );
+
+    const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed, {
+        refreshDeps: [refreshAssts],
+    })
 
     const deleteApi = useRequest(deleteConversation, {
         manual: true,
@@ -165,7 +172,7 @@ function SideBarContent() {
                         <div className='flex-1 flex flex-col transition-opacity duration-500 -mr-2 pr-2 overflow-y-auto' ref={scrollRef}>
                             <div>
                                 <div className='flex flex-col gap-2 pb-2 text-token-text-primary text-sm'>
-                                    <UsedAsstGPTs />
+                                    <UsedAsstGPTs asstsList={asstListApi.data || []} />
                                     <div className='empty:hidden'>
                                         {
                                             list?.map((gItem, index) => (

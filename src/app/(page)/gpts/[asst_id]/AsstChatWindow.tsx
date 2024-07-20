@@ -46,13 +46,13 @@ export function AsstPageHeader({ data, }: { data: IGroupListItem, }) {
         setAnchorEl(null);
     };
 
-    const deleteApi = useRequest(settingAsstSidebar, {
+    const removeGptAsst = useRequest(settingAsstSidebar, {
         manual: true,
         onSuccess: () => {
             setRefresh(prev => !prev)
         },
         onError: (error: any) => {
-            toast.error("删除失败")
+            toast.error("隐藏失败")
         }
     })
     const open = Boolean(anchorEl);
@@ -147,7 +147,7 @@ export function AsstPageHeader({ data, }: { data: IGroupListItem, }) {
                         </div>
                     </MenuItem>
                     <MenuItem onClick={() => {
-                        deleteApi.run(data?.id, 'hide')
+                        removeGptAsst.run(data?.id, 'hide')
                     }}>
                         <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
                             <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>

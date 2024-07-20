@@ -1,5 +1,5 @@
-import React from 'react'
-import { Modal } from '@mui/material'
+import React, { useMemo, useState } from 'react'
+import { Menu, MenuItem, Modal } from '@mui/material'
 import IconClose from '@/assets/icons/icon-close.svg'
 import IconChat from '@/assets/icons/icon-start-chat.svg'
 import IconChecked from '@/assets/icons/icon-checked.svg'
@@ -7,6 +7,14 @@ import IconStar from '@/assets/icons/icon-star.svg'
 import Link from 'next/link'
 import { IGroupListItem, TOOLS_TO_CONVERTS } from '@/interface/gpts'
 import { faker } from '@faker-js/faker'
+import IconPinned from '@/assets/icons/icon-pinned.svg'
+import IconMore from '@/assets/icons/icon-more.svg'
+import { useSetRecoilState } from 'recoil'
+import { refreshAsstList } from '@/store/atom'
+import { settingAsstSidebar } from '@/api/gpt'
+import { useRequest } from 'ahooks'
+import toast from '@/until/message'
+import IconHide from '@/assets/icons/icon-hide.svg'
 
 interface IRoleModalProps {
     data?: IGroupListItem
@@ -15,6 +23,46 @@ interface IRoleModalProps {
 }
 
 export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [isKeep, setIsKeep] = useState<boolean>(false)
+
+    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const setRefresh = useSetRecoilState(refreshAsstList)
+
+    const removeAsst = useRequest(settingAsstSidebar, {
+        manual: true,
+        onSuccess: () => {
+            setRefresh(prev => !prev)
+            setIsKeep(prev => !prev)
+        },
+        onError: (error: any) => {
+            toast.error('操作失败')
+        }
+    })
+
+    const handleOnPinnedAsstToSideBar = () => {
+        if (data?.id) {
+            removeAsst.run(data.id, isKeep ? 'hide' : 'keep')
+            handleClose()
+        }
+    }
+
+    const placement = useMemo(() => {
+        return {
+            transformOrigin: { horizontal: 'left', vertical: 'top' },
+            anchorOrigin: { horizontal: 'left', vertical: 'bottom' }
+        }
+    }, [])
+
+    const openMenu = Boolean(anchorEl);
+
     return (
         <Modal open={open}>
             <div className='w-full h-full flex flex-col items-center justify-center'>
@@ -23,6 +71,17 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                         <div className='relative flex h-full flex-col gap-2 overflow-hidden px-2 py-4'>
                             <div className='flex flex-grow flex-col gap-4 overflow-y-auto px-3 md:px-6 pb-20 pt-16'>
                                 <div className='absolute top-4 right-4 z-10 flex items-center justify-end bg-gradient-to-b from-token-main-surface-primary to-transparent pb-2'>
+                                    <button
+                                        onClick={handleClick}
+                                        aria-controls={open ? 'gpt-modal-select-sub-menu' : undefined}
+                                        aria-haspopup="true"
+                                        aria-expanded={open ? 'true' : undefined}
+                                        className='btn cursor-pointer relative btn-ghost btn-circle'
+                                    >
+                                        <div className='flex w-full items-center justify-center gap-1.5'>
+                                            <IconMore className='icon-md' />
+                                        </div>
+                                    </button>
                                     <button className='btn relative btn-ghost btn-circle' onClick={onClose}>
                                         <div className='flex w-full items-center justify-center gap-1.5'>
                                             <IconClose className='icon-md' />
@@ -115,6 +174,54 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                         </div>
                     </div>
                 </div>
+                <Menu
+                    anchorEl={anchorEl}
+                    id="gpt-modal-select-sub-menu"
+                    open={openMenu}
+                    onClose={handleClose}
+                    onClick={handleClose}
+                    slotProps={{
+                        paper: {
+                            elevation: 0,
+                            sx: {
+                                p: 0,
+                                width: 168,
+                                mt: '4px',
+                                py: 1,
+                                borderRadius: '8px',
+                                border: '1px solid #e0e0e0',
+                                overflow: 'visible',
+                                zIndex: 90,
+                                boxShadow: '0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)'
+                            },
+                        },
+                    }}
+                    MenuListProps={{
+                        sx: {
+                            p: 0,
+                            '.MuiMenuItem-root': {
+                                p: 0,
+                                bgcolor: 'transparent',
+                                ':hover': {
+                                    bgcolor: 'unset'
+                                }
+                            }
+                        }
+                    }}
+                    {
+                    ...placement as any
+                    }
+
+                >
+                    <MenuItem onClick={handleOnPinnedAsstToSideBar}>
+                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                                {isKeep ? <IconHide /> : <IconPinned />}
+                            </div>
+                            {isKeep ? '从边栏隐藏' : '保留在边栏中'}
+                        </div>
+                    </MenuItem>
+                </Menu>
             </div>
         </Modal>
     )

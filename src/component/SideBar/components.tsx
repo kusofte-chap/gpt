@@ -2,16 +2,14 @@
 
 import cn from 'classnames'
 import { ChangeEvent, useContext, useEffect, useMemo, useRef, useState } from "react"
-import { reNameConversation } from '@/api/gpt'
+import { reNameConversation, settingAsstSidebar } from '@/api/gpt'
 import MoreIcon from '@/assets/icons/icon-more.svg'
 import { IHistoryItem } from "@/interface/history"
 import { ClickAwayListener, Portal, useMediaQuery } from '@mui/material'
 import { PopoverContext } from "./context"
 import IconRename from '@/assets/icons/icon-rename.svg'
 import IconDelete from '@/assets/icons/icon-delete.svg'
-import { useRequest } from 'ahooks'
 import { IGroupListItem } from '@/interface/gpts'
-import { asyncGptsUsed } from '@/api/gpts'
 import IconGptsLogo from '@/assets/icons/icon-gpts-logo.svg'
 import AigcLogo from '@/assets/aigc.svg'
 import _groupBy from 'lodash/groupBy'
@@ -22,15 +20,17 @@ import {
     TransitionGroup,
 } from 'react-transition-group';
 import ChatGptLogo from '@/assets/logo.svg'
-import { useRecoilValue, useSetRecoilState } from 'recoil'
+import { useSetRecoilState } from 'recoil'
 import { mobileDrawerState, refreshAsstList } from '@/store/atom'
+import IconHide from '@/assets/icons/icon-hide.svg'
+import { useRequest } from 'ahooks'
+import { useRouter } from 'next/navigation'
 
 export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (id: string) => void }) {
     const { activeItemId, setActiveItemId } = useContext(PopoverContext)
     const [openPopup, setOpenPopup] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [renameValue, setRenameValue] = useState(data.title)
-
     const isMobile = useMediaQuery('(max-width: 768px)');
 
     const anchorEl = useRef<HTMLButtonElement | null>(null)
@@ -161,6 +161,80 @@ export function ChartItem({ data, onDelete }: { data: IHistoryItem, onDelete: (i
     )
 }
 
+export function GptsItem({ data, onRemove }: { data: IGroupListItem, onRemove: () => void }) {
+    const { activeItemId, setActiveItemId } = useContext(PopoverContext)
+    const [openPopup, setOpenPopup] = useState(false)
+    const [coord, setCoord] = useState<{ x: number, y: number } | null>(null)
+    const anchorEl = useRef<HTMLButtonElement | null>(null)
+    const isMobile = useMediaQuery('(max-width: 768px)')
+    const setMobileSideBar = useSetRecoilState(mobileDrawerState)
+    const handleClick = () => {
+        if (isMobile) {
+            setMobileSideBar(false)
+        }
+    }
+
+    const handleIconButton = (event: any) => {
+        event.stopPropagation();
+        event.preventDefault();
+        setOpenPopup((prev) => !prev);
+        setActiveItemId(data.id)
+        if (anchorEl.current) {
+            const { height, x, y } = anchorEl.current.getBoundingClientRect()
+            setCoord({ x: x, y: height + y })
+        }
+    }
+
+    const isActive = useMemo(() => {
+        return data.id === activeItemId
+    }, [activeItemId])
+
+    return (
+        <div className='relative group' key={data.id}>
+            <Link href={`/gpts/${data.id}`} onClick={handleClick}>
+                <button className={cn('flex h-10 w-full items-center gap-2 rounded-lg px-2 text-token-text-primary group-hover:bg-token-sidebar-surface-secondary', {
+                    'bg-token-sidebar-surface-secondary': isActive,
+                })}>
+                    <div className='h-6 w-6 flex-shrink-0'>
+                        <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full'>
+                            <img src={data?.profile_picture_path} alt={data?.name} className='h-full w-full object-contain object-center' width={80} height={80} />
+                        </div>
+                    </div>
+                    <span className='text-sm truncate'>{data?.name || data.description}</span>
+                </button>
+            </Link>
+            <div className={cn('absolute bottom-0 right-0 top-0 items-center pr-2 hidden group-hover:flex', {
+                'flex': isActive
+            })}>
+                <ClickAwayListener onClickAway={() => setOpenPopup(false)}>
+                    <button
+                        ref={anchorEl}
+                        type='button'
+                        onClick={handleIconButton}
+                        className='chat-title-btn flex items-center justify-center border-none bg-transparent outline-none text-[#0d0d0d]'
+                    >
+                        <MoreIcon />
+                    </button>
+                </ClickAwayListener>
+                {
+                    openPopup && coord && < Portal container={document.body}>
+                        <div
+                            style={{ top: coord.y, left: coord.x }}
+                            className='absolute top-[18px] left-[18px] z-10 max-w-xs rounded-lg popover bg-token-main-surface-primary shadow-lg will-change-[opacity,transform] border border-token-border-light'>
+                            <button
+                                onClick={onRemove}
+                                className='flex w-[120px] gap-2 items-center m-1.5 rounded p-2.5 text-sm cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary group relative'>
+                                <IconHide />
+                                从边栏隐藏
+                            </button>
+                        </div>
+                    </Portal>
+                }
+            </div>
+        </div>
+    )
+}
+
 export function HistoryGroup({ chatList, onDelete, title, }: {
     chatList: IHistoryItem[],
     title: string,
@@ -190,16 +264,22 @@ export function HistoryGroup({ chatList, onDelete, title, }: {
     )
 }
 
-export function UsedAsstGPTs() {
-    const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed, {
-        manual: true,
-    })
-    const setMobileSideBar = useSetRecoilState(mobileDrawerState)
-    const refreshAssts = useRecoilValue(refreshAsstList)
-
+export function UsedAsstGPTs({ asstsList = [] }: { asstsList: IGroupListItem[] }) {
     const isMobile = useMediaQuery('(max-width: 768px)')
+    const router = useRouter()
+    const setMobileSideBar = useSetRecoilState(mobileDrawerState)
+    const setRefresh = useSetRecoilState(refreshAsstList)
 
-    const isFirst = useRef(true)
+    const removeAsst = useRequest(settingAsstSidebar, {
+        manual: true,
+        onSuccess: () => {
+            setRefresh(prev => !prev)
+            router.replace('/gpts')
+        },
+        onError: (error: any) => {
+            toast.error("隐藏失败")
+        }
+    })
 
     const handleClick = () => {
         if (isMobile) {
@@ -207,19 +287,7 @@ export function UsedAsstGPTs() {
         }
     }
 
-    useEffect(() => {
-        asstListApi.run()
-    }, [])
-
-    useEffect(() => {
-        if (isFirst.current) {
-            isFirst.current = false
-            return
-        }
-        asstListApi.refresh()
-    }, [refreshAssts])
-
-    if (asstListApi.loading) {
+    if (asstsList.length === 0) {
         return null
     }
 
@@ -236,18 +304,9 @@ export function UsedAsstGPTs() {
                 </button>
             </Link>
             {
-                asstListApi.data?.map((item) => {
+                asstsList.map((item) => {
                     return (
-                        <Link href={`/gpts/${item.id}`} onClick={handleClick}>
-                            <button className='flex h-10 w-full items-center gap-2 rounded-lg px-2 text-token-text-primary hover:bg-token-sidebar-surface-secondary'>
-                                <div className='h-6 w-6 flex-shrink-0'>
-                                    <div className='gizmo-shadow-stroke overflow-hidden rounded-full w-full h-full'>
-                                        <img src={item?.profile_picture_path} alt={item?.name} className='h-full w-full object-contain object-center' width={80} height={80} />
-                                    </div>
-                                </div>
-                                <span className='text-sm truncate'>{item?.name || item.description}</span>
-                            </button>
-                        </Link>
+                        <GptsItem data={item} key={item.id} onRemove={() => removeAsst.run(item.id, 'hide')} />
                     )
                 })
             }
