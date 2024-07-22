@@ -5,7 +5,7 @@ import { Menu, MenuItem, useMediaQuery } from '@mui/material';
 import cn from 'classnames'
 import IconMenu from '@/assets/icons/icon-menu.svg'
 import IconChecked from '@/assets/icons/icon-check.svg'
-import { CHAT_MODEL, IModelOption } from '@/interface/common';
+import { CHAT_MODEL, IModelOption, MODEL_CONVERTER_TEXT } from '@/interface/common';
 import StyledTooltip from '../StyledTooltip';
 import IconCloseMenu from '@/assets/icons/icon-close-menu.svg'
 import { useToggleSideBar } from '@/hooks/index';
@@ -26,7 +26,7 @@ export function ModelSelect({
 }: { modeList: IModelOption[], onChange?: (m: CHAT_MODEL) => void }) {
     const searchParams = useSearchParams()
     const defaultModel = searchParams.get('model')
-    const [model, setModel] = useState(defaultModel || modeList[0].mode)
+    const [model, setModel] = useState<CHAT_MODEL | string>(defaultModel || modeList[0].mode)
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
@@ -73,7 +73,7 @@ export function ModelSelect({
                     'bg-token-main-surface-secondary': open
                 })}
             >
-                {model}
+                {MODEL_CONVERTER_TEXT[model]}
                 <IconMenu />
             </button>
             <Menu
@@ -119,7 +119,7 @@ export function ModelSelect({
                                         {LogoMaps[item.mode]}
                                     </div>
                                     <div className='flex flex-col flex-1'>
-                                        {item.mode}
+                                        {item.name}
                                         <div className='text-token-text-tertiary text-xs'>{item.description}</div>
                                     </div>
                                     <div className={cn('flex-shrink-0 w-4 h-4 hidden', { '!block': model === item.mode })}>

@@ -214,8 +214,8 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
 
                 >
                     <MenuItem onClick={handleOnPinnedAsstToSideBar}>
-                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-black cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center text-token-text-secondary'>
                                 {isKeep ? <IconHide /> : <IconPinned />}
                             </div>
                             {isKeep ? '从边栏隐藏' : '保留在边栏中'}

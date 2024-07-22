@@ -29,7 +29,7 @@ export default function ChatGptWindow({ conversationId, isNewChat }: IContentPro
     const [startWrite, setStartWrite] = useState(false)
     const [isStreaming, setIsStreaming] = useState(false)
     const searchParams = useSearchParams()
-    const [chatModel, setChatModel] = useState(searchParams.get('model') || CHAT_MODEL.GPT_4o)
+    const [chatModel, setChatModel] = useState(searchParams.get('model') || CHAT_MODEL.GPT_3_5_TURBO)
 
     const messageQueue = useRef<IStreamItem[]>([])
     const messageBuffer = useRef<string>('')

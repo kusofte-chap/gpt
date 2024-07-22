@@ -88,7 +88,7 @@ export function AsstPageHeader({ data, }: { data: IGroupListItem, }) {
                         aria-controls={open ? 'gpt-modal-select-menu' : undefined}
                         aria-haspopup="true"
                         aria-expanded={open ? 'true' : undefined}
-                        className='group flex cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary text-token-text-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
+                        className='group flex text-black cursor-pointer items-center gap-1 rounded-xl py-2 px-3 text-lg font-semibold hover:bg-token-main-surface-secondary juice:rounded-lg overflow-hidden whitespace-nowrap'>
                         {`${data?.name}`}
                         <IconMenuDown />
                     </button>
@@ -131,16 +131,16 @@ export function AsstPageHeader({ data, }: { data: IGroupListItem, }) {
                     <MenuItem onClick={() => {
                         router.replace(`/gpts/${data.id}`)
                     }} >
-                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                        <div className='flex-1 flex text-black gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center text-token-text-secondary'>
                                 <IconEdit />
                             </div>
                             新聊天
                         </div>
                     </MenuItem>
                     <MenuItem onClick={() => setOpenRoleModal(true)} >
-                        <div className='flex-1 flex gap-2.5 items-center   mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                        <div className='flex-1 flex gap-2.5 items-center   mx-1.5 rounded p-2.5 text-sm text-black cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center text-token-text-secondary'>
                                 <IconInfo />
                             </div>
                             关于
@@ -149,8 +149,8 @@ export function AsstPageHeader({ data, }: { data: IGroupListItem, }) {
                     <MenuItem onClick={() => {
                         removeGptAsst.run(data?.id, 'hide')
                     }}>
-                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-token-text-secondary cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
-                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center'>
+                        <div className='flex-1 flex gap-2.5 items-center  mx-1.5 rounded p-2.5 text-sm text-block cursor-pointer focus-visible:outline-0 hover:bg-token-main-surface-secondary focus-visible:bg-token-main-surface-secondary radix-disabled:opacity-50 group relative !pr-3 !opacity-100'>
+                            <div className='flex-shrink-0 w-5 h-5 flex items-center justify-center text-token-text-secondary'>
                                 <IconHide />
                             </div>
                             从边栏隐藏
