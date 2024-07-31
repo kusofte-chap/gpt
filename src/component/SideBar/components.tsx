@@ -291,6 +291,7 @@ export function UsedAsstGPTs({ asstsList = [] }: { asstsList: IGroupListItem[] }
         return null
     }
 
+
     return (
         <div>
             <Link href='/' onClick={handleClick}>
@@ -304,7 +305,7 @@ export function UsedAsstGPTs({ asstsList = [] }: { asstsList: IGroupListItem[] }
                 </button>
             </Link>
             {
-                asstsList.map((item) => {
+                asstsList?.filter(item => item.id).map((item) => {
                     return (
                         <GptsItem data={item} key={item.id} onRemove={() => removeAsst.run(item.id, 'hide')} />
                     )

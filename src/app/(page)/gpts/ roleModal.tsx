@@ -9,8 +9,8 @@ import { IGroupListItem, TOOLS_TO_CONVERTS } from '@/interface/gpts'
 import { faker } from '@faker-js/faker'
 import IconPinned from '@/assets/icons/icon-pinned.svg'
 import IconMore from '@/assets/icons/icon-more.svg'
-import { useSetRecoilState } from 'recoil'
-import { refreshAsstList } from '@/store/atom'
+import { useRecoilState, useSetRecoilState } from 'recoil'
+import { keepAsstListState, refreshAsstList } from '@/store/atom'
 import { settingAsstSidebar } from '@/api/gpt'
 import { useRequest } from 'ahooks'
 import toast from '@/until/message'
@@ -24,7 +24,8 @@ interface IRoleModalProps {
 
 export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [isKeep, setIsKeep] = useState<boolean>(false)
+    // const [isKeep, setIsKeep] = useState<boolean>(false)
+    const [keepAsstList, setKeepAsstList] = useRecoilState(keepAsstListState)
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -40,7 +41,14 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
         manual: true,
         onSuccess: () => {
             setRefresh(prev => !prev)
-            setIsKeep(prev => !prev)
+            setKeepAsstList(prev => {
+                const arr = [...prev]
+                if (arr.includes(data?.id || '')) {
+                    arr.splice(arr.indexOf(data?.id || ''), 1)
+                    return arr
+                }
+                return [...arr, data?.id || '']
+            })
         },
         onError: (error: any) => {
             toast.error('操作失败')
@@ -63,6 +71,10 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
 
     const openMenu = Boolean(anchorEl);
 
+    const isKeep = useMemo(() => {
+        return keepAsstList.includes(data?.id || '')
+    }, [keepAsstList, data?.id])
+
     return (
         <Modal open={open}>
             <div className='w-full h-full flex flex-col items-center justify-center'>
@@ -82,7 +94,10 @@ export default function RoleModal({ data, open, onClose }: IRoleModalProps) {
                                             <IconMore className='icon-md' />
                                         </div>
                                     </button>
-                                    <button className='btn relative btn-ghost btn-circle' onClick={onClose}>
+                                    <button className='btn relative btn-ghost btn-circle' onClick={() => {
+                                        onClose()
+                                        handleClose()
+                                    }}>
                                         <div className='flex w-full items-center justify-center gap-1.5'>
                                             <IconClose className='icon-md' />
                                         </div>

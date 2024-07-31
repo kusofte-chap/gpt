@@ -9,7 +9,7 @@ import moment from 'moment';
 import _groupBy from 'lodash/groupBy'
 import toast from '@/until/message';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { mobileDrawerState, newConversationState, refreshAsstList } from '@/store/atom';
+import { keepAsstListState, mobileDrawerState, newConversationState, refreshAsstList } from '@/store/atom';
 import { PopoverContext, PopoverProvider } from './context';
 import Spinning from '../Spinning';
 import cn from 'classnames'
@@ -75,6 +75,7 @@ function SideBarContent() {
     const newConversation = useRecoilValue(newConversationState)
     const scrollRef = useRef<HTMLDivElement>(null)
     const refreshAssts = useRecoilValue(refreshAsstList)
+    const setKeepAsstList = useSetRecoilState(keepAsstListState)
 
     const { setActiveItemId } = useContext(PopoverContext)
     const { toggleCloseSideBar } = useToggleSideBar()
@@ -94,6 +95,11 @@ function SideBarContent() {
 
     const asstListApi = useRequest<IGroupListItem[], any>(asyncGptsUsed, {
         refreshDeps: [refreshAssts],
+        onSuccess: (data) => {
+            if (data) {
+                setKeepAsstList(data.filter(item => item.id).map(item => item.id))
+            }
+        }
     })
 
     const deleteApi = useRequest(deleteConversation, {

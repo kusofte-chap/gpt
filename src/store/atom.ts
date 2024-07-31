@@ -50,3 +50,8 @@ export const refreshAsstList = atom({
     key: 'gpt-refresh-asst-key',
     default: false
 })
+
+export const keepAsstListState = atom({
+    key: 'gpt-keep-asst-key',
+    default: [] as string[]
+})
